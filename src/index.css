@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  /* Your custom colors */
+  --color-bg: #ecebe6;
+  --color-card: #ffffff;
+  --color-panel: #f6f6f4;
+  --color-text: #1f221f;
+  --color-muted: #8b8f8c;
+  --color-blue1: #4a636e;
+  --color-blue2: #375b6d;
+  --color-muted-blue: #a9c0c9;
+  --color-border: #e5e7eb;
+  --color-success: #4a9b68;
+  --color-warning: #d9a44a;
+  --color-danger: #d95a4a;
+  
+  /* Shadow */
+  --shadow-custom: 0 10px 30px rgba(20, 30, 20, 0.06);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out;
+}
+
+
+
+
+
