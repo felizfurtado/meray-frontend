@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import LeadsTable from "../components/leads/LeadsTable";
+import LeadsTable from "../components/leads/Leadstable";
 import LeadsAddModal from "../components/leads/LeadsAddModal";
 import PageHeader from "../components/layout/PageHeader";
 

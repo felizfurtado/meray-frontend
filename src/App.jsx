@@ -10,7 +10,7 @@ import Invoices from "./pages/Invoices";
 import RequireAuth from "./auth/RequireAuth";
 import useAuth from "./auth/useAuth";
 
-import Sidebar from "./components/layout/Sidebar";
+import Sidebar from "./components/layout/SideBar";
 import TopBar from "./components/layout/TopBar";
 import Tasks from "./pages/Tasks";
 import CompanyProfile from "./pages/CompanyProfile";
@@ -42,41 +42,41 @@ function App() {
     switch (currentPage) {
       case "leads":
         return <Leads sidebarCollapsed={collapsed} />;
-      case "customers":
-        return <Customers sidebarCollapsed={collapsed} />;
-      case "invoices":
-        return <Invoices sidebarCollapsed={collapsed} />;
-      case "tasks":
-        return <Tasks sidebarCollapsed={collapsed} />;
+      // case "customers":
+      //   return <Customers sidebarCollapsed={collapsed} />;
+      // case "invoices":
+      //   return <Invoices sidebarCollapsed={collapsed} />;
+      // case "tasks":
+      //   return <Tasks sidebarCollapsed={collapsed} />;
 
-      case "company-profile":
-        return <CompanyProfile sidebarCollapsed={collapsed} />;
+      // case "company-profile":
+      //   return <CompanyProfile sidebarCollapsed={collapsed} />;
 
-      case "datamigration":
-        return <DataMigrationTool sidebarCollapsed={collapsed} />;
+      // case "datamigration":
+      //   return <DataMigrationTool sidebarCollapsed={collapsed} />;
 
-      case "pipelinedashboard":
-        return <PipelineDashboard sidebarCollapsed={collapsed} />;
+      // case "pipelinedashboard":
+      //   return <PipelineDashboard sidebarCollapsed={collapsed} />;
 
-      case "inventory":
-        return <Inventory sidebarCollapsed={collapsed} />;
+      // case "inventory":
+      //   return <Inventory sidebarCollapsed={collapsed} />;
 
-      case "bankrec":
-        return <BankReconciliation sidebarCollapsed={collapsed} />;
-      case "chartsofaccounts":
-        return <ChartOfAccounts sidebarCollapsed={collapsed} />;
-      case "financialreports":
-        return <FinancialReports sidebarCollapsed={collapsed} />;
-      case "vendor":
-        return <VendorPage sidebarCollapsed={collapsed} />;
-      case "expense":
-        return <ExpensePage sidebarCollapsed={collapsed} />;
-      case "employee":
-        return <WPSPayrollPage sidebarCollapsed={collapsed} />;
-      case "manualjournal":
-        return <ManualJournals sidebarCollapsed={collapsed} />;
-      case "expensesinvoicing":
-        return <ExpenseInvoices sidebarCollapsed={collapsed} />;
+      // case "bankrec":
+      //   return <BankReconciliation sidebarCollapsed={collapsed} />;
+      // case "chartsofaccounts":
+      //   return <ChartOfAccounts sidebarCollapsed={collapsed} />;
+      // case "financialreports":
+      //   return <FinancialReports sidebarCollapsed={collapsed} />;
+      // case "vendor":
+      //   return <VendorPage sidebarCollapsed={collapsed} />;
+      // case "expense":
+      //   return <ExpensePage sidebarCollapsed={collapsed} />;
+      // case "employee":
+      //   return <WPSPayrollPage sidebarCollapsed={collapsed} />;
+      // case "manualjournal":
+      //   return <ManualJournals sidebarCollapsed={collapsed} />;
+      // case "expensesinvoicing":
+      //   return <ExpenseInvoices sidebarCollapsed={collapsed} />;
       case "invoiceadj":
         return <InvoiceAdjustments sidebarCollapsed={collapsed} />;
       case "inventoryinvoice":
@@ -84,7 +84,7 @@ function App() {
       case "inventorysalesinvoice":
         return <InventorySalesInvoices sidebarCollapsed={collapsed} />;
       case "operations":
-        return <OperationsPage sidebarCollapsed={collapsed} />;
+        return <OperationsPage sidebarCollapsed={collapsed} setCurrentPage={setCurrentPage}/>;
       default:
         return <Leads />;
     }

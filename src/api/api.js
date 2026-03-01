@@ -22,6 +22,7 @@ api.interceptors.request.use(
 
     if (companySlug) {
       config.baseURL = `http://${companySlug}.localhost:8000`;
+      // config.baseURL = `/api`;
     }
 
     if (accessToken) {
@@ -67,6 +68,7 @@ api.interceptors.response.use(
       try {
         const response = await axios.post(
           `${originalRequest.baseURL}/token/refresh/`,
+          // `/api/token/refresh/`,
           { refresh: refreshToken }
         );
 

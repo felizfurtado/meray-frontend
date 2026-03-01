@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import useAuth from "../auth/useAuth";
+import logo from "../components/layout/logo_circle.png";
 
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
-    companyName: 'bigco',
-    username: 'admin',
-    password: 'admin123'
+    companyName: '',
+    username: '',
+    password: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -40,6 +41,7 @@ const Login = ({ onLogin }) => {
 
     try {
       const apiUrl = `http://${companySlug}.localhost:8000/login/`;
+      // const apiUrl = `/api/login/`;
       
       console.log('API URL:', apiUrl);
       
@@ -139,9 +141,13 @@ window.location.href = "/";
           <div className="relative z-10 flex flex-col h-full">
             {/* Logo - Visible on mobile too */}
             <div className="flex items-center gap-3 mb-6 md:mb-8">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-blue1 to-blue2 flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg md:text-xl font-bold">M</span>
-              </div>
+             <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl overflow-hidden shadow-lg bg-white flex items-center justify-center">
+  <img
+    src={logo}
+    alt="Meray CRM Logo"
+    className="w-full h-full object-contain p-1"
+  />
+</div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-gray-900">Meray CRM</h1>
                 <p className="text-xs md:text-sm text-gray-600">Multi-tenant CRM Platform</p>
@@ -192,14 +198,14 @@ window.location.href = "/";
             </div>
             
             {/* API Info - Bottom */}
-            <div className="pt-4 md:pt-6 border-t border-gray-200">
+            {/* <div className="pt-4 md:pt-6 border-t border-gray-200">
               <p className="text-sm text-gray-600 mb-2">
                 <strong>API Endpoint:</strong>
               </p>
               <div className="bg-gray-50 p-2 md:p-3 rounded-lg font-mono text-xs text-gray-700 break-all">
                 POST http://{formData.companyName ? formData.companyName.toLowerCase().replace(/\s+/g, '') : 'company'}.localhost:8000/login/
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -249,7 +255,7 @@ window.location.href = "/";
                   value={formData.companyName}
                   onChange={handleInputChange}
                   className="w-full pl-10 md:pl-11 pr-3 md:pr-4 py-3 md:py-3.5 border border-gray-300 rounded-xl focus:border-blue2 focus:ring-2 focus:ring-blue2/20 focus:outline-none transition-all duration-200 text-gray-900 bg-white text-sm md:text-base"
-                  placeholder="e.g., bigco"
+                  placeholder="Your Company Name "
                   disabled={loading}
                 />
               </div>
@@ -335,32 +341,7 @@ window.location.href = "/";
                 <span className="text-xs md:text-sm text-gray-700 group-hover:text-gray-900">Remember company</span>
               </button>
 
-              <div className="flex flex-wrap gap-2 md:gap-3">
-                <button
-                  type="button"
-                  onClick={() => loadDemoCredentials('bigco')}
-                  className="text-xs md:text-sm text-blue2 font-medium hover:text-blue1 transition-colors flex items-center gap-1 md:gap-2 px-2 py-1 bg-blue2/5 rounded-lg"
-                >
-                  <i className="fas fa-building text-xs"></i>
-                  BigCo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => loadDemoCredentials('startup')}
-                  className="text-xs md:text-sm text-blue2 font-medium hover:text-blue1 transition-colors flex items-center gap-1 md:gap-2 px-2 py-1 bg-blue2/5 rounded-lg"
-                >
-                  <i className="fas fa-rocket text-xs"></i>
-                  Startup
-                </button>
-                <button
-                  type="button"
-                  onClick={() => loadDemoCredentials('company1')}
-                  className="text-xs md:text-sm text-blue2 font-medium hover:text-blue1 transition-colors flex items-center gap-1 md:gap-2 px-2 py-1 bg-blue2/5 rounded-lg"
-                >
-                  <i className="fas fa-briefcase text-xs"></i>
-                  Company1
-                </button>
-              </div>
+          
             </div>
 
             {/* Submit Button */}

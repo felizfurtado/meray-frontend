@@ -1,30 +1,30 @@
 import React from 'react';
 
-import logo from './logo.png';
+import logo from './logo_circle.png';
 const Sidebar = ({ currentPage, setCurrentPage, collapsed, onLogout }) => {
   const navItems = [
     // { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-chart-pie' },
     { id: 'leads', label: 'Leads', icon: 'fas fa-users' },
-    { id: 'customers', label: 'Customers', icon: 'fas fa-user-tie' },
-    { id: 'invoices', label: 'Invoices', icon: 'fas fa-file-invoice' },
-    { id: 'invoiceadj', label: 'Invoices Adjustment', icon: 'fas fa-file-invoice' },
-    { id: 'tasks', label: 'Tasks', icon: 'fas fa-tasks' },
-    { id: 'company-profile', label: 'Company', icon: 'fas fa-building' },
-    { id: 'vendor', label: 'vendor', icon: 'fas fa-building' },
-    { id: 'expense', label: 'expense', icon: 'fas fa-building' },
-    { id: 'employee', label: 'employee', icon: 'fas fa-building' },
-    { id: 'datamigration', label: 'Migration', icon: 'fas fa-exchange' },
-    { id: 'pipelinedashboard', label: 'Pipeline Dashboard', icon: 'fas fa-warehouse' },
-    { id: 'inventory', label: 'Inventory', icon: 'fas fa-warehouse' },
-    { id: 'inventoryinvoice', label: 'Inventory Purchase Invoice', icon: 'fas fa-warehouse' },
-    { id: 'inventorysalesinvoice', label: 'Inventory Sales Invoicing', icon: 'fas fa-warehouse' },
-    { id: 'bankrec', label: 'Bank Recon', icon: 'fas fa-wallet' },
-    { id: 'chartsofaccounts', label: 'Chart Of Accounts', icon: 'fas fa-chart-bar' },
-    { id: 'financialreports', label: 'Financial Reports', icon: 'fas fa-file' },
-    { id: 'manualjournal', label: 'Manual Journal', icon: 'fas fa-file' },
-    { id: 'expensesinvoicing', label: 'Expenses Invoicing', icon: 'fas fa-file' },
+    // { id: 'customers', label: 'Customers', icon: 'fas fa-user-tie' },
+    // { id: 'invoices', label: 'Invoices', icon: 'fas fa-file-invoice' },
+    // { id: 'invoiceadj', label: 'Invoices Adjustment', icon: 'fas fa-file-invoice' },
+    // { id: 'tasks', label: 'Tasks', icon: 'fas fa-tasks' },
+    // { id: 'company-profile', label: 'Company', icon: 'fas fa-building' },
+    // { id: 'vendor', label: 'vendor', icon: 'fas fa-building' },
+    // { id: 'expense', label: 'expense', icon: 'fas fa-building' },
+    // { id: 'employee', label: 'employee', icon: 'fas fa-building' },
+    // { id: 'datamigration', label: 'Migration', icon: 'fas fa-exchange' },
+    // { id: 'pipelinedashboard', label: 'Pipeline Dashboard', icon: 'fas fa-warehouse' },
+    // { id: 'inventory', label: 'Inventory', icon: 'fas fa-warehouse' },
+    // { id: 'inventoryinvoice', label: 'Inventory Purchase Invoice', icon: 'fas fa-warehouse' },
+    // { id: 'inventorysalesinvoice', label: 'Inventory Sales Invoicing', icon: 'fas fa-warehouse' },
+    // { id: 'bankrec', label: 'Bank Recon', icon: 'fas fa-wallet' },
+    // { id: 'chartsofaccounts', label: 'Chart Of Accounts', icon: 'fas fa-chart-bar' },
+    // { id: 'financialreports', label: 'Financial Reports', icon: 'fas fa-file' },
+    // { id: 'manualjournal', label: 'Manual Journal', icon: 'fas fa-file' },
+    // { id: 'expensesinvoicing', label: 'Expenses Invoicing', icon: 'fas fa-file' },
     { id: 'operations', label: 'Operations', icon: 'fas fa-file' },
-    { id: 'settings', label: 'Settings', icon: 'fas fa-cog' }
+    // { id: 'settings', label: 'Settings', icon: 'fas fa-cog' }
   ];
 
   return (
@@ -40,7 +40,7 @@ const Sidebar = ({ currentPage, setCurrentPage, collapsed, onLogout }) => {
       {/* Logo Container */}
       <div className={`
         flex flex-col items-center gap-2
-        py-5 border-b border-gray-200
+        py-3 border-b border-gray-200
         w-full h-auto justify-center
         transition-all duration-300
       `}>
@@ -48,8 +48,8 @@ const Sidebar = ({ currentPage, setCurrentPage, collapsed, onLogout }) => {
           src={logo}
           alt="Meray Logo"
           className={`
-            transition-all duration-300 object-contain
-            ${collapsed ? 'w-8 h-8' : 'w-20 h-20'}
+            transition-all duration-300 
+            ${collapsed ? 'w-8 h-8' : 'w-10 h-10'}
           `}
         />
         

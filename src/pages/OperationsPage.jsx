@@ -1,71 +1,95 @@
 // pages/OperationsPage.jsx
-import React, { useState } from 'react';
-import PageHeader from '../components/layout/PageHeader';
-import SubNav from '../components/layout/SubNav';
+
+import React, { useEffect, useState } from "react";
+import PageHeader from "../components/layout/PageHeader";
+import SubNav from "../components/layout/SubNav";
+import api from "../api/api";
+
+// import pages
+import Customers from "./Customers";
+import Invoices from "./Invoices";
+import VendorPage from "./VendorPage";
+import ExpensePage from "./ExpensePage";
+import ExpenseInvoices from "./ExpenseInvoices";
+import ChartOfAccounts from "./ChartOfAccounts";
+import ManualJournals from "./ManualJournals";
+import Inventory from "./Inventory";
+import InventoryInvoices from "./InventoryInvoices";
+import InventorySalesInvoices from "./InventorySalesInvoices";
 
 const OperationsPage = ({ collapsed = false }) => {
-  const [activeSection, setActiveSection] = useState('revenue');
 
-  const operationsData = {
-    label: "Customers",
-    icon: "fas fa-briefcase",
-    sections: {
-      revenue: {
-        label: "Revenue",
-        items: [
-          { name: "Customers", path: "/customers", icon: "fas fa-users" },
-          { name: "Invoicing", path: "/invoices", icon: "fas fa-file-invoice" }
-        ]
-      },
-      expenses: {
-        label: "Expenses",
-        items: [
-          { name: "Vendors", path: "/vendors", icon: "fas fa-truck" },
-          { name: "Expense Input", path: "/expenses", icon: "fas fa-receipt" },
-          { name: "Expense Invoicing", path: "/expense-invoices", icon: "fas fa-file-invoice-dollar" }
-        ]
-      },
-      accounting: {
-        label: "Accounting",
-        items: [
-          { name: "Chart of Accounts", path: "/chart-of-accounts", icon: "fas fa-book" },
-          { name: "Manual Journals", path: "/manual-journals", icon: "fas fa-pen" }
-        ]
-      },
-      inventory: {
-        label: "Inventory",
-        items: [
-          { name: "Inventory", path: "/inventory", icon: "fas fa-box" },
-          { name: "Sales Invoices", path: "/inventory-sales-invoices", icon: "fas fa-file-invoice" },
-          { name: "Purchase Invoices", path: "/inventory-invoices", icon: "fas fa-file-invoice-dollar" }
-        ]
+  const [operationsData, setOperationsData] = useState(null);
+  const [activeModule, setActiveModule] = useState(null);
+
+  useEffect(() => {
+    fetchNavigation();
+  }, []);
+
+  const fetchNavigation = async () => {
+    try {
+      const res = await api.get("/navigation/");
+      if (res.data.success) {
+        const data = res.data.operations;
+        setOperationsData(data);
+
+        // default to first item of first section
+        const firstSection = Object.keys(data.sections)[0];
+        const firstItem = data.sections[firstSection].items[0];
+        setActiveModule(firstItem.key);
       }
+    } catch (error) {
+      console.error("Navigation load failed", error);
     }
   };
 
-  const handleAddNew = () => {
-    console.log('Add new in section:', operationsData.sections[activeSection].label);
+  const renderModule = () => {
+    switch (activeModule) {
+      case "customers":
+        return <Customers sidebarCollapsed={collapsed} />;
+      case "invoices":
+        return <Invoices sidebarCollapsed={collapsed} />;
+      case "vendor":
+        return <VendorPage sidebarCollapsed={collapsed} />;
+      case "expense":
+        return <ExpensePage sidebarCollapsed={collapsed} />;
+      case "expensesinvoicing":
+        return <ExpenseInvoices sidebarCollapsed={collapsed} />;
+      case "chartsofaccounts":
+        return <ChartOfAccounts sidebarCollapsed={collapsed} />;
+      case "manualjournal":
+        return <ManualJournals sidebarCollapsed={collapsed} />;
+      case "inventory":
+        return <Inventory sidebarCollapsed={collapsed} />;
+      case "inventoryinvoice":
+        return <InventoryInvoices sidebarCollapsed={collapsed} />;
+      case "inventorysalesinvoice":
+        return <InventorySalesInvoices sidebarCollapsed={collapsed} />;
+      default:
+        return null;
+    }
   };
+
+  if (!operationsData) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
-      
-      <PageHeader 
-        title={operationsData.label}
-        description="Manage your business operations"
-        icon={operationsData.icon}
-        buttonText="Add New"
-        onButtonClick={handleAddNew}
-        collapsed={collapsed}
-      />
+
+
 
       <div className="mt-6">
-        <SubNav collapsed={collapsed} />
+        <SubNav
+          collapsed={collapsed}
+          sections={operationsData.sections}
+          setActiveModule={setActiveModule}
+        />
       </div>
 
-      
+      {/* 🔥 THIS IS THE IMPORTANT PART */}
+      <div className="mt-8">
+        {renderModule()}
+      </div>
 
-      
     </div>
   );
 };
