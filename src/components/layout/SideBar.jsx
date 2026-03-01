@@ -7,9 +7,10 @@ const Sidebar = ({ currentPage, setCurrentPage, collapsed, onLogout }) => {
     { id: 'leads', label: 'Leads', icon: 'fas fa-users' },
     // { id: 'customers', label: 'Customers', icon: 'fas fa-user-tie' },
     // { id: 'invoices', label: 'Invoices', icon: 'fas fa-file-invoice' },
-    // { id: 'invoiceadj', label: 'Invoices Adjustment', icon: 'fas fa-file-invoice' },
+    { id: 'operations', label: 'Operations', icon: 'fas fa-file' },
+    { id: 'invoiceadj', label: 'Invoices Adjustment', icon: 'fas fa-file-invoice' },
     // { id: 'tasks', label: 'Tasks', icon: 'fas fa-tasks' },
-    // { id: 'company-profile', label: 'Company', icon: 'fas fa-building' },
+    { id: 'company-profile', label: 'Company', icon: 'fas fa-building' },
     // { id: 'vendor', label: 'vendor', icon: 'fas fa-building' },
     // { id: 'expense', label: 'expense', icon: 'fas fa-building' },
     // { id: 'employee', label: 'employee', icon: 'fas fa-building' },
@@ -23,7 +24,7 @@ const Sidebar = ({ currentPage, setCurrentPage, collapsed, onLogout }) => {
     // { id: 'financialreports', label: 'Financial Reports', icon: 'fas fa-file' },
     // { id: 'manualjournal', label: 'Manual Journal', icon: 'fas fa-file' },
     // { id: 'expensesinvoicing', label: 'Expenses Invoicing', icon: 'fas fa-file' },
-    { id: 'operations', label: 'Operations', icon: 'fas fa-file' },
+
     // { id: 'settings', label: 'Settings', icon: 'fas fa-cog' }
   ];
 

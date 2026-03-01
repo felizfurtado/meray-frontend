@@ -157,44 +157,59 @@ const CustomersTable = ({ sidebarCollapsed = false }) => {
     }
 
     // actions
-    filteredCols.push({
-      field: "actions",
-      header: "Actions",
-      width: "140px",
-      render: (_, row) => (
-        <div className="flex gap-2 justify-center">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              openView(row);
-            }}
-            className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600"
-          >
-            <i className="fas fa-eye text-sm"></i>
-          </button>
+  filteredCols.push({
+  field: "actions",
+  header: "Actions",
+  width: "180px",
+  render: (_, row) => (
+    <div className="flex items-center justify-end gap-1">
+      {/* VIEW */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          openView(row);
+        }}
+        className="group relative p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+        title="View Details"
+      >
+        <i className="fas fa-eye text-sm"></i>
+        <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          View
+        </span>
+      </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              openEdit(row);
-            }}
-            className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600"
-          >
-            <i className="fas fa-edit text-sm"></i>
-          </button>
+      {/* EDIT */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          openEdit(row);
+        }}
+        className="group relative p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+        title="Edit"
+      >
+        <i className="fas fa-edit text-sm"></i>
+        <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          Edit
+        </span>
+      </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              deleteCustomer(row);
-            }}
-            className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600"
-          >
-            <i className="fas fa-trash text-sm"></i>
-          </button>
-        </div>
-      ),
-    });
+      {/* DELETE */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          deleteCustomer(row);
+        }}
+        className="group relative p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+        title="Delete"
+      >
+        <i className="fas fa-trash-alt text-sm"></i>
+        <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          Delete
+        </span>
+      </button>
+    </div>
+  ),
+});
 
     return filteredCols;
   }

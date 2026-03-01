@@ -1,11 +1,10 @@
-// components/layout/SubNav.jsx
-
 import React, { useState, useEffect } from "react";
 
 const SubNav = ({
   collapsed = false,
   sections = {},
-  setActiveModule
+  setActiveModule,
+  activeModule
 }) => {
 
   const sectionKeys = Object.keys(sections);
@@ -23,7 +22,6 @@ const SubNav = ({
 
   return (
     <div className={`${leftMargin} mr-14 transition-all duration-300`}>
-
       <nav className="bg-blue2 rounded-xl border border-blue2/20 w-full overflow-hidden">
 
         {/* SECTION TABS */}
@@ -57,13 +55,37 @@ const SubNav = ({
               <button
                 key={index}
                 onClick={() => setActiveModule(item.key)}
-                className="flex-1 flex items-center justify-center gap-3 px-4 py-2.5 hover:border border-white hover:bg-white/10 transition-all duration-200 group"
+                className={`flex-1 flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border transition-all duration-200 group ${
+                  activeModule === item.key
+                    ? "bg-white text-blue2 border-white"
+                    : "border-transparent text-white hover:border-white hover:bg-white/10"
+                }`}
               >
-                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:bg-white/30">
-                  <i className={`${item.icon} text-sm text-white`} />
+                {/* ICON BOX */}
+                <div
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    activeModule === item.key
+                      ? "bg-blue2/10"
+                      : "bg-white/20 group-hover:bg-white/30"
+                  }`}
+                >
+                  <i
+                    className={`${item.icon} text-sm ${
+                      activeModule === item.key
+                        ? "text-blue2"
+                        : "text-white"
+                    }`}
+                  />
                 </div>
 
-                <span className="text-sm font-medium text-white">
+                {/* LABEL */}
+                <span
+                  className={`text-sm font-medium ${
+                    activeModule === item.key
+                      ? "text-blue2"
+                      : "text-white"
+                  }`}
+                >
                   {item.label}
                 </span>
               </button>

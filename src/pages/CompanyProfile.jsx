@@ -28,7 +28,8 @@ const CompanyProfile = ({ collapsed = false }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState({ text: "", type: "" });
+  const [errors, setErrors] = useState({});
 
   /* ================= LOAD FROM BACKEND ================= */
 
@@ -44,6 +45,10 @@ const CompanyProfile = ({ collapsed = false }) => {
       }
     } catch (err) {
       console.error("Failed to load profile", err);
+      setMessage({ 
+        text: "Failed to load company profile", 
+        type: "error" 
+      });
     } finally {
       setLoading(false);
     }
@@ -53,11 +58,35 @@ const CompanyProfile = ({ collapsed = false }) => {
 
   const handleChange = (key, value) => {
     setProfile((prev) => ({ ...prev, [key]: value }));
+    // Clear error for this field
+    if (errors[key]) {
+      const newErrors = { ...errors };
+      delete newErrors[key];
+      setErrors(newErrors);
+    }
   };
 
   const handleImageUpload = (e, key) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ 
+        text: "File size must be less than 5MB", 
+        type: "error" 
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setMessage({ 
+        text: "Only image files are allowed", 
+        type: "error" 
+      });
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -65,31 +94,94 @@ const CompanyProfile = ({ collapsed = false }) => {
         ...prev,
         [key]: reader.result, // base64
       }));
+      setMessage({ text: "", type: "" });
+    };
+    reader.onerror = () => {
+      setMessage({ 
+        text: "Failed to read image file", 
+        type: "error" 
+      });
     };
     reader.readAsDataURL(file);
   };
 
+  const validate = () => {
+    const newErrors = {};
+
+    if (!profile.company_name?.trim()) {
+      newErrors.company_name = "Company name is required";
+    }
+
+    if (profile.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (profile.website && !/^https?:\/\/.+\..+/.test(profile.website)) {
+      newErrors.website = "Invalid website URL (include http:// or https://)";
+    }
+
+    if (profile.is_vat_registered && !profile.vat_number?.trim()) {
+      newErrors.vat_number = "VAT number is required for registered companies";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const saveProfile = async () => {
+    if (!validate()) {
+      setMessage({ 
+        text: "Please fix the errors before saving", 
+        type: "error" 
+      });
+      return;
+    }
+
     try {
       setSaving(true);
-      setMessage("");
+      setMessage({ text: "", type: "" });
 
       await api.post("/company-profile/save/", profile);
 
       setIsEditing(false);
-      setMessage("Profile saved successfully.");
+      setMessage({ 
+        text: "Profile saved successfully.", 
+        type: "success" 
+      });
+      
+      // Clear message after 3 seconds
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
     } catch (err) {
       console.error("Save failed", err);
-      setMessage("Failed to save profile.");
+      setMessage({ 
+        text: err.response?.data?.error || "Failed to save profile", 
+        type: "error" 
+      });
     } finally {
       setSaving(false);
     }
   };
 
+  const cancelEdit = () => {
+    setIsEditing(false);
+    fetchProfile(); // Reload original data
+    setErrors({});
+    setMessage({ text: "", type: "" });
+  };
+
   if (loading) {
     return (
       <div className={`${leftMargin} p-10`}>
-        <p className="text-gray-500">Loading company profile...</p>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-blue2/20 rounded-full"></div>
+              <div className="absolute top-0 left-0 w-16 h-16 border-4 border-blue2 border-t-transparent rounded-full animate-spin"></div>
+              <i className="fas fa-building absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-blue2 text-lg"></i>
+            </div>
+            <p className="mt-4 text-[#8b8f8c] font-medium">Loading company profile...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -106,38 +198,61 @@ const CompanyProfile = ({ collapsed = false }) => {
       <div className={`${leftMargin} mr-14 mt-4 transition-all duration-300`}>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
 
-          {/* ================= HEADER ================= */}
-          <div className="flex justify-between items-center px-8 py-6 border-b">
-            <div>
-              <h2 className="text-xl font-bold text-[#1f221f]">
-                Company Information
-              </h2>
-              <p className="text-sm text-gray-500">
-                This information appears on invoices & documents
-              </p>
-            </div>
+          {/* Header */}
+          <div className="relative overflow-hidden bg-gradient-to-r from-blue2/5 to-[#a9c0c9]/20 rounded-t-2xl border-b border-blue2/20 px-8 py-6">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue2/10 to-[#a9c0c9]/20 rounded-full -mr-10 -mt-10"></div>
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue2 to-[#4a636e] flex items-center justify-center shadow-lg shadow-blue2/30">
+                  <i className="fas fa-building text-white text-xl"></i>
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-[#1f221f]">
+                    Company Information
+                  </h2>
+                  <p className="text-sm text-[#8b8f8c] flex items-center gap-2">
+                    <i className="fas fa-info-circle text-blue2/70 text-xs"></i>
+                    This information appears on invoices & documents
+                  </p>
+                </div>
+              </div>
 
-            {!isEditing && (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="px-5 py-2 bg-blue2 text-white rounded-xl flex items-center gap-2"
-              >
-                <i className="fas fa-pen"></i>
-                Edit
-              </button>
-            )}
+              {!isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="inline-flex items-center px-5 py-2.5 bg-blue2 text-white rounded-xl hover:bg-[#4a636e] transition-all shadow-sm gap-2"
+                >
+                  <i className="fas fa-pen text-sm"></i>
+                  Edit Profile
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="p-8 space-y-10">
+          {/* Message Alert */}
+          {message.text && (
+            <div className={`mx-8 mt-6 px-4 py-3 rounded-lg border flex items-center gap-3 ${
+              message.type === "success" 
+                ? "bg-green-50 border-green-200 text-green-700" 
+                : "bg-red-50 border-red-200 text-red-600"
+            }`}>
+              <i className={`fas ${message.type === "success" ? "fa-check-circle" : "fa-exclamation-triangle"}`}></i>
+              <span className="text-sm font-medium">{message.text}</span>
+            </div>
+          )}
+
+          <div className="p-8 space-y-6">
 
             {/* BASIC INFO */}
             <Card title="Basic Information" icon="fa-id-card">
               <Grid>
                 <Input
-                  label="Company Name *"
+                  label="Company Name"
                   value={profile.company_name}
                   disabled={!isEditing}
                   onChange={(v) => handleChange("company_name", v)}
+                  required
+                  error={errors.company_name}
                 />
 
                 <ImageUpload
@@ -159,64 +274,90 @@ const CompanyProfile = ({ collapsed = false }) => {
               />
 
               <Grid>
-                <Input label="City" value={profile.city}
+                <Input 
+                  label="City" 
+                  value={profile.city}
                   disabled={!isEditing}
-                  onChange={(v) => handleChange("city", v)} />
-                <Input label="State" value={profile.state}
+                  onChange={(v) => handleChange("city", v)} 
+                />
+                <Input 
+                  label="State" 
+                  value={profile.state}
                   disabled={!isEditing}
-                  onChange={(v) => handleChange("state", v)} />
-                <Input label="Postal Code" value={profile.postal_code}
+                  onChange={(v) => handleChange("state", v)} 
+                />
+                <Input 
+                  label="Postal Code" 
+                  value={profile.postal_code}
                   disabled={!isEditing}
-                  onChange={(v) => handleChange("postal_code", v)} />
+                  onChange={(v) => handleChange("postal_code", v)} 
+                />
               </Grid>
             </Card>
 
             {/* CONTACT */}
             <Card title="Contact Details" icon="fa-phone">
               <Grid>
-                <Input label="Phone" value={profile.phone_number}
+                <Input 
+                  label="Phone" 
+                  value={profile.phone_number}
                   disabled={!isEditing}
-                  onChange={(v) => handleChange("phone_number", v)} />
-                <Input label="Email" value={profile.email}
+                  onChange={(v) => handleChange("phone_number", v)} 
+                />
+                <Input 
+                  label="Email" 
+                  value={profile.email}
                   disabled={!isEditing}
-                  onChange={(v) => handleChange("email", v)} />
-                <Input label="Website" value={profile.website}
+                  onChange={(v) => handleChange("email", v)}
+                  error={errors.email}
+                />
+                <Input 
+                  label="Website" 
+                  value={profile.website}
                   disabled={!isEditing}
-                  onChange={(v) => handleChange("website", v)} />
+                  onChange={(v) => handleChange("website", v)}
+                  error={errors.website}
+                />
               </Grid>
             </Card>
 
             {/* TAX */}
             <Card title="Tax & Registration" icon="fa-file-invoice">
-              <label className="flex items-center gap-3 mb-4">
-                <input
-                  type="checkbox"
-                  checked={profile.is_vat_registered}
-                  disabled={!isEditing}
-                  onChange={(e) =>
-                    handleChange("is_vat_registered", e.target.checked)
-                  }
-                />
-                <span>VAT Registered</span>
-              </label>
+              <div className="space-y-4">
+                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={profile.is_vat_registered}
+                    disabled={!isEditing}
+                    onChange={(e) =>
+                      handleChange("is_vat_registered", e.target.checked)
+                    }
+                    className="w-4 h-4 text-blue2 border-gray-300 rounded focus:ring-blue2"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-[#1f221f]">VAT Registered</span>
+                    <p className="text-xs text-[#8b8f8c]">Enable if your company is registered for VAT</p>
+                  </div>
+                </label>
 
-              {profile.is_vat_registered && (
+                {profile.is_vat_registered && (
+                  <Input
+                    label="VAT Number"
+                    value={profile.vat_number}
+                    disabled={!isEditing}
+                    onChange={(v) => handleChange("vat_number", v)}
+                    required
+                    error={errors.vat_number}
+                  />
+                )}
+
                 <Input
-                  label="VAT Number"
-                  value={profile.vat_number}
+                  label="Corporate Registration Number"
+                  value={profile.corporate_registration_number}
                   disabled={!isEditing}
-                  onChange={(v) => handleChange("vat_number", v)}
+                  onChange={(v) => handleChange("corporate_registration_number", v)}
                 />
-              )}
-
-              <Input
-                label="Corporate Registration Number"
-                value={profile.corporate_registration_number}
-                disabled={!isEditing}
-                onChange={(v) =>
-                  handleChange("corporate_registration_number", v)
-                }
-              />
+              </div>
             </Card>
 
             {/* SIGNATURE */}
@@ -244,18 +385,20 @@ const CompanyProfile = ({ collapsed = false }) => {
                 label="Footer Notes"
                 value={profile.custom_footer_notes}
                 disabled={!isEditing}
-                onChange={(v) =>
-                  handleChange("custom_footer_notes", v)
-                }
+                onChange={(v) => handleChange("custom_footer_notes", v)}
               />
+              <p className="text-xs text-[#8b8f8c] mt-2 flex items-center gap-1">
+                <i className="fas fa-info-circle"></i>
+                These notes will appear at the bottom of all invoices and documents
+              </p>
             </Card>
 
             {/* ACTIONS */}
             {isEditing && (
-              <div className="flex justify-end gap-3 pt-6 border-t">
+              <div className="flex justify-end gap-3 pt-6 border-t border-[#e5e7eb]">
                 <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-5 py-2 border rounded-xl"
+                  onClick={cancelEdit}
+                  className="px-5 py-2.5 border border-[#e5e7eb] rounded-xl text-sm font-medium text-[#4a636e] hover:bg-[#f6f6f4] transition-all"
                 >
                   Cancel
                 </button>
@@ -263,11 +406,11 @@ const CompanyProfile = ({ collapsed = false }) => {
                 <button
                   onClick={saveProfile}
                   disabled={saving}
-                  className="px-6 py-2 bg-blue2 text-white rounded-xl flex items-center gap-2"
+                  className="inline-flex items-center px-6 py-2.5 bg-blue2 border border-transparent rounded-xl text-sm font-medium text-white hover:bg-[#4a636e] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm gap-2"
                 >
                   {saving ? (
                     <>
-                      <i className="fas fa-spinner fa-spin"></i>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       Saving...
                     </>
                   ) : (
@@ -277,12 +420,6 @@ const CompanyProfile = ({ collapsed = false }) => {
                     </>
                   )}
                 </button>
-              </div>
-            )}
-
-            {message && (
-              <div className="text-sm text-green-600 mt-4">
-                {message}
               </div>
             )}
 
@@ -298,48 +435,60 @@ export default CompanyProfile;
 /* ================= COMPONENTS ================= */
 
 const Card = ({ title, icon, children }) => (
-  <div className="mb-10 bg-white border border-gray-200 rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
-    <div className="flex items-center gap-3 mb-8">
-      <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue2/10">
+  <div className="bg-white border border-[#e5e7eb] rounded-xl p-6 hover:border-blue2/30 transition-all duration-300">
+    <div className="flex items-center gap-3 mb-6">
+      <div className="w-8 h-8 rounded-lg bg-blue2/10 flex items-center justify-center">
         <i className={`fas ${icon} text-blue2 text-sm`}></i>
       </div>
-      <h2 className="text-lg font-semibold text-[#1f221f]">
+      <h3 className="text-sm font-semibold text-[#1f221f] uppercase tracking-wider">
         {title}
-      </h2>
+      </h3>
     </div>
-    {children}
+    <div className="space-y-4">
+      {children}
+    </div>
   </div>
 );
 
 const Grid = ({ children }) => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
     {children}
   </div>
 );
 
-
-const Input = ({ label, value, onChange, disabled }) => (
-  <div className="space-y-2">
-    <label className="text-sm font-medium text-gray-600">
+const Input = ({ label, value, onChange, disabled, required, error }) => (
+  <div className="space-y-1.5">
+    <label className="flex items-center gap-1.5 text-xs font-medium text-[#4a636e]">
+      <i className="fas fa-circle text-blue2/70 text-[6px]"></i>
       {label}
+      {required && <span className="text-[#d95a4a]">*</span>}
     </label>
 
     <input
       value={value || ""}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
-      className={`w-full border rounded-xl px-4 py-2.5 text-sm transition-all duration-200
+      className={`w-full rounded-lg border-2 px-4 py-2.5 text-sm text-[#1f221f] transition-all duration-200
         ${disabled 
-          ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
-          : "bg-white hover:border-blue2 focus:border-blue2 focus:ring-2 focus:ring-blue2/20 outline-none"
+          ? "bg-gray-100 text-[#8b8f8c] border-[#e5e7eb] cursor-not-allowed" 
+          : error
+            ? "border-red-300 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+            : "border-[#e5e7eb] hover:border-blue2/30 focus:border-blue2 focus:ring-2 focus:ring-blue2/20 bg-white"
         }`}
     />
+    {error && (
+      <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
+        <i className="fas fa-exclamation-circle"></i>
+        {error}
+      </p>
+    )}
   </div>
 );
 
 const Textarea = ({ label, value, onChange, disabled }) => (
-  <div className="space-y-2">
-    <label className="text-sm font-medium text-gray-600">
+  <div className="space-y-1.5">
+    <label className="flex items-center gap-1.5 text-xs font-medium text-[#4a636e]">
+      <i className="fas fa-circle text-blue2/70 text-[6px]"></i>
       {label}
     </label>
 
@@ -347,44 +496,45 @@ const Textarea = ({ label, value, onChange, disabled }) => (
       value={value || ""}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
-      rows={4}
-      className={`w-full border rounded-xl px-4 py-3 text-sm transition-all duration-200 resize-none
+      rows={3}
+      className={`w-full rounded-lg border-2 px-4 py-2.5 text-sm text-[#1f221f] transition-all duration-200 resize-none
         ${disabled 
-          ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
-          : "bg-white hover:border-blue2 focus:border-blue2 focus:ring-2 focus:ring-blue2/20 outline-none"
+          ? "bg-gray-100 text-[#8b8f8c] border-[#e5e7eb] cursor-not-allowed" 
+          : "border-[#e5e7eb] hover:border-blue2/30 focus:border-blue2 focus:ring-2 focus:ring-blue2/20 bg-white"
         }`}
     />
   </div>
 );
 
-const ImageUpload = ({ label, value, onChange, disabled, required }) => (
-  <div className="space-y-2">
-    <div className="flex items-center justify-between">
-      <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
-    </div>
+const ImageUpload = ({ label, value, onChange, disabled }) => (
+  <div className="space-y-1.5">
+    <label className="flex items-center gap-1.5 text-xs font-medium text-[#4a636e]">
+      <i className="fas fa-circle text-blue2/70 text-[6px]"></i>
+      {label}
+    </label>
 
     {value ? (
       <div className="relative group">
-        <div className="relative rounded-xl overflow-hidden border-2 border-gray-200 group-hover:border-blue2 transition-all duration-200 shadow-sm">
+        <div className="relative rounded-lg overflow-hidden border-2 border-[#e5e7eb] group-hover:border-blue2/30 transition-all duration-200">
           <img
             src={value}
-            alt="preview"
-            className="h-72 w-72 object-cover"
+            alt={label}
+            className="h-40 w-full object-cover"
           />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all duration-200"></div>
         </div>
         {!disabled && (
           <>
-            <div className="absolute -top-3 -right-3 bg-blue2 text-white rounded-full p-3 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 scale-90 group-hover:scale-100 cursor-pointer hover:bg-blue-700"
-                 onClick={() => document.getElementById(`${label}-upload`)?.click()}>
-              <i className="fas fa-pen text-sm"></i>
-            </div>
-            <p className="text-sm text-blue1 mt-3 cursor-pointer hover:underline inline-flex items-center gap-2"
-               onClick={() => document.getElementById(`${label}-upload`)?.click()}>
-              <i className="fas fa-sync-alt text-xs"></i>
+            <button
+              onClick={() => document.getElementById(`${label}-upload`)?.click()}
+              className="absolute top-2 right-2 w-8 h-8 bg-blue2 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:bg-[#4a636e] flex items-center justify-center"
+            >
+              <i className="fas fa-pen text-xs"></i>
+            </button>
+            <p 
+              onClick={() => document.getElementById(`${label}-upload`)?.click()}
+              className="text-xs text-blue2 mt-2 cursor-pointer hover:underline inline-flex items-center gap-1"
+            >
+              <i className="fas fa-sync-alt"></i>
               Change image
             </p>
           </>
@@ -393,21 +543,18 @@ const ImageUpload = ({ label, value, onChange, disabled, required }) => (
     ) : (
       <div 
         onClick={() => !disabled && document.getElementById(`${label}-upload`)?.click()}
-        className={`relative group cursor-pointer transition-all duration-200
+        className={`relative group transition-all duration-200
           ${!disabled ? "cursor-pointer" : "cursor-not-allowed"}`}
       >
-        <div className={`h-48 w-72 rounded-xl border-3 border-dashed flex flex-col items-center justify-center text-center p-6 transition-all duration-200
+        <div className={`h-32 rounded-lg border-2 border-dashed flex flex-col items-center justify-center text-center p-4 transition-all duration-200
           ${!disabled 
-            ? "border-gray-300 group-hover:border-blue2 group-hover:bg-blue-50/50 bg-gray-50" 
-            : "border-gray-200 bg-gray-50/30"
+            ? "border-[#e5e7eb] group-hover:border-blue2/30 group-hover:bg-blue2/5 bg-gray-50" 
+            : "border-[#e5e7eb] bg-gray-50/30"
           }`}>
-          <i className={`fas fa-cloud-upload-alt ${!disabled ? "text-blue1" : "text-gray-400"} text-4xl mb-3 transition-transform group-hover:scale-110`}></i>
-          <span className="text-sm font-medium text-gray-600">Click to upload</span>
-          <span className="text-xs text-gray-400 mt-2">PNG, JPG up to 5MB</span>
+          <i className={`fas fa-cloud-upload-alt ${!disabled ? "text-blue2" : "text-gray-400"} text-2xl mb-2`}></i>
+          <span className="text-xs font-medium text-[#4a636e]">Click to upload</span>
+          <span className="text-xs text-[#8b8f8c] mt-1">PNG, JPG up to 5MB</span>
         </div>
-        {!disabled && (
-          <div className="absolute inset-0 rounded-xl ring-2 ring-transparent group-hover:ring-blue-100 pointer-events-none transition-all"></div>
-        )}
       </div>
     )}
 
@@ -421,15 +568,3 @@ const ImageUpload = ({ label, value, onChange, disabled, required }) => (
     />
   </div>
 );
-
-
-/* ================= COMPONENTS ================= */
-
-
-
-
-
-
-
-
-

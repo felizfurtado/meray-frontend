@@ -261,7 +261,7 @@ window.location.href = "/";
               </div>
               <p className="text-xs text-gray-500">
                 Subdomain: <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">
-                  {formData.companyName.toLowerCase().replace(/\s+/g, '')}.localhost:8000
+                  {formData.companyName.toLowerCase().replace(/\s+/g, '')}.meray.cloud
                 </code>
               </p>
             </div>

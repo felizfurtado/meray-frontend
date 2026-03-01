@@ -49,8 +49,8 @@ function App() {
       // case "tasks":
       //   return <Tasks sidebarCollapsed={collapsed} />;
 
-      // case "company-profile":
-      //   return <CompanyProfile sidebarCollapsed={collapsed} />;
+      case "company-profile":
+        return <CompanyProfile sidebarCollapsed={collapsed} />;
 
       // case "datamigration":
       //   return <DataMigrationTool sidebarCollapsed={collapsed} />;

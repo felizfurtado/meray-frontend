@@ -1,7 +1,4 @@
-// pages/OperationsPage.jsx
-
 import React, { useEffect, useState } from "react";
-import PageHeader from "../components/layout/PageHeader";
 import SubNav from "../components/layout/SubNav";
 import api from "../api/api";
 
@@ -33,7 +30,7 @@ const OperationsPage = ({ collapsed = false }) => {
         const data = res.data.operations;
         setOperationsData(data);
 
-        // default to first item of first section
+        // Default: first section → first item
         const firstSection = Object.keys(data.sections)[0];
         const firstItem = data.sections[firstSection].items[0];
         setActiveModule(firstItem.key);
@@ -75,17 +72,15 @@ const OperationsPage = ({ collapsed = false }) => {
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
 
-
-
       <div className="mt-6">
         <SubNav
           collapsed={collapsed}
           sections={operationsData.sections}
           setActiveModule={setActiveModule}
+          activeModule={activeModule}
         />
       </div>
 
-      {/* 🔥 THIS IS THE IMPORTANT PART */}
       <div className="mt-8">
         {renderModule()}
       </div>
