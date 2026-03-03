@@ -2,10 +2,15 @@ import React, { useEffect, useState } from "react";
 import ViewEditModal from "../layout/ViewEditModal";
 import api from "../../api/api";
 
-const InvoicesViewModal = ({ open, onClose, invoiceId }) => {
+const InvoicesViewModal = ({ open, onClose, invoiceId, refetchInvoices }) => {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentAccount, setPaymentAccount] = useState("");
+  const [accounts, setAccounts] = useState([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
 
   useEffect(() => {
     if (!open || !invoiceId) return;
@@ -17,6 +22,36 @@ const InvoicesViewModal = ({ open, onClose, invoiceId }) => {
       .catch(() => setInvoice(null))
       .finally(() => setLoading(false));
   }, [open, invoiceId]);
+
+  // Fetch accounts when payment modal opens
+useEffect(() => {
+  if (showPaymentModal) {
+    setLoadingAccounts(true);
+    
+    // Use the correct endpoint from your URLs
+    api.get("/accounts/list/")
+      .then((res) => {
+        console.log("Accounts response:", res.data);
+        
+        // Based on your AccountListView, it might return { rows: [...] }
+        const allAccounts = res.data.rows || res.data.accounts || res.data.results || [];
+        
+        // Filter for cash (1010) and bank (1020) accounts
+        const paymentAccounts = allAccounts.filter(acc => 
+          acc.code === "1010" || 
+          acc.code === "1020"
+        );
+        
+        console.log("Filtered payment accounts:", paymentAccounts);
+        setAccounts(paymentAccounts);
+      })
+      .catch((err) => {
+        console.error("Error fetching accounts:", err);
+        alert("Failed to load accounts. Please try again.");
+      })
+      .finally(() => setLoadingAccounts(false));
+  }
+}, [showPaymentModal]);
 
   if (!open) return null;
 
@@ -44,12 +79,53 @@ const InvoicesViewModal = ({ open, onClose, invoiceId }) => {
   const getStatusColor = (status) => {
     const statusMap = {
       'draft': 'bg-[#d9a44a]/10 text-[#d9a44a] border-[#d9a44a]/20',
-      'sent': 'bg-blue2/10 text-blue2 border-blue2/20',
+      'posted': 'bg-blue2/10 text-blue2 border-blue2/20',
       'paid': 'bg-[#4a9b68]/10 text-[#4a9b68] border-[#4a9b68]/20',
       'overdue': 'bg-[#d95a4a]/10 text-[#d95a4a] border-[#d95a4a]/20',
       'cancelled': 'bg-[#8b8f8c]/10 text-[#8b8f8c] border-[#8b8f8c]/20',
     };
     return statusMap[status?.toLowerCase()] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  const handlePostInvoice = async () => {
+    setActionLoading(true);
+    try {
+      await api.post(`/invoices/${invoiceId}/post/`);
+      // Refresh invoice data
+      const res = await api.get(`/invoices/${invoiceId}/`);
+      setInvoice(res.data.invoice);
+      refetchInvoices?.();
+    } catch (err) {
+      console.error("Error posting invoice:", err);
+      alert(err.response?.data?.error || "Failed to post invoice");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleMarkAsPaid = async () => {
+    if (!paymentAccount) {
+      alert("Please select a payment account");
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      await api.post(`/invoices/${invoiceId}/mark-paid/`, {
+        payment_account: paymentAccount
+      });
+      // Refresh invoice data
+      const res = await api.get(`/invoices/${invoiceId}/`);
+      setInvoice(res.data.invoice);
+      refetchInvoices?.();
+      setShowPaymentModal(false);
+      setPaymentAccount("");
+    } catch (err) {
+      console.error("Error marking invoice as paid:", err);
+      alert(err.response?.data?.error || "Failed to mark invoice as paid");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -86,6 +162,110 @@ const InvoicesViewModal = ({ open, onClose, invoiceId }) => {
         </div>
       ) : (
         <>
+          {/* Payment Modal */}
+          {showPaymentModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowPaymentModal(false)}>
+              <div className="bg-white rounded-2xl max-w-md w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-[#1f221f] flex items-center gap-2">
+                      <i className="fas fa-credit-card text-blue2"></i>
+                      Select Payment Account
+                    </h3>
+                    <button 
+                      onClick={() => setShowPaymentModal(false)}
+                      className="text-[#8b8f8c] hover:text-[#1f221f] transition-colors"
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <p className="text-sm text-[#8b8f8c] mt-1">
+                    Choose the account where this payment will be recorded
+                  </p>
+                </div>
+                
+                <div className="p-6">
+                  {loadingAccounts ? (
+                    <div className="py-8 text-center">
+                      <div className="w-12 h-12 border-4 border-blue2/20 border-t-blue2 rounded-full animate-spin mx-auto mb-3"></div>
+                      <p className="text-sm text-[#8b8f8c]">Loading accounts...</p>
+                    </div>
+                  ) : accounts.length === 0 ? (
+                    <div className="py-8 text-center">
+                      <div className="w-16 h-16 rounded-full bg-[#d95a4a]/10 flex items-center justify-center mx-auto mb-3">
+                        <i className="fas fa-exclamation-triangle text-[#d95a4a] text-2xl"></i>
+                      </div>
+                      <p className="text-sm font-medium text-[#1f221f] mb-1">No Payment Accounts Found</p>
+                      <p className="text-xs text-[#8b8f8c]">Please create a bank or cash account first</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {accounts.map((account) => (
+                        <label
+                          key={account.id}
+                          className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${
+                            paymentAccount === account.id
+                              ? "border-blue2 bg-blue2/5"
+                              : "border-gray-200 hover:border-blue2/30 hover:bg-blue2/5"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="paymentAccount"
+                            value={account.id}
+                            checked={paymentAccount === account.id}
+                            onChange={(e) => setPaymentAccount(e.target.value)}
+                            className="w-4 h-4 text-blue2 border-gray-300 focus:ring-blue2"
+                          />
+                          <div className="ml-3 flex-1">
+  <div className="flex items-center justify-between">
+    <div>
+      <span className="font-medium text-[#1f221f]">{account.name}</span>
+      <span className="text-xs text-[#8b8f8c] ml-2">({account.code})</span>
+    </div>
+    <span className="text-xs px-2 py-1 rounded-full bg-blue2/10 text-blue2 font-medium">
+      {account.type || (account.code === "1010" ? "Cash" : account.code === "1020" ? "Bank" : account.type)}
+    </span>
+  </div>
+  <p className="text-xs text-[#8b8f8c] mt-1">
+    Balance: {formatCurrency(account.balance || 0)}
+  </p>
+</div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-6 border-t border-gray-200 bg-[#f6f6f4]/50 flex justify-end gap-3">
+                  <button
+                    onClick={() => setShowPaymentModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-[#4a636e] hover:text-[#1f221f] hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleMarkAsPaid}
+                    disabled={!paymentAccount || actionLoading}
+                    className="inline-flex items-center px-4 py-2 bg-[#4a9b68] border border-transparent rounded-lg text-sm font-medium text-white hover:bg-[#3a7b52] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4a9b68] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                  >
+                    {actionLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-check-circle mr-2"></i>
+                        Confirm Payment
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Header - Matching theme */}
           <div className="relative overflow-hidden bg-gradient-to-r from-blue2/5 to-[#a9c0c9]/20 rounded-2xl border border-blue2/20 p-6 mb-6">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue2/10 to-[#a9c0c9]/20 rounded-full -mr-10 -mt-10"></div>
@@ -108,7 +288,7 @@ const InvoicesViewModal = ({ open, onClose, invoiceId }) => {
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(invoice.status)}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${
                           invoice.status?.toLowerCase() === 'paid' ? 'bg-[#4a9b68]' :
-                          invoice.status?.toLowerCase() === 'sent' ? 'bg-blue2' :
+                          invoice.status?.toLowerCase() === 'posted' ? 'bg-blue2' :
                           invoice.status?.toLowerCase() === 'draft' ? 'bg-[#d9a44a]' :
                           invoice.status?.toLowerCase() === 'overdue' ? 'bg-[#d95a4a]' :
                           'bg-[#8b8f8c]'
@@ -133,6 +313,56 @@ const InvoicesViewModal = ({ open, onClose, invoiceId }) => {
                   {formatCurrency(invoice.total)}
                 </span>
               </div>
+            </div>
+
+            {/* Action Buttons - Based on Status */}
+            <div className="relative flex justify-end gap-3 mt-4 pt-4 border-t border-blue2/10">
+              {invoice.status?.toLowerCase() === 'draft' && (
+                <button
+                  onClick={handlePostInvoice}
+                  disabled={actionLoading}
+                  className="inline-flex items-center px-4 py-2 bg-blue2 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-[#4a636e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                >
+                  {actionLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Posting...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-paper-plane mr-2"></i>
+                      Post Invoice
+                    </>
+                  )}
+                </button>
+              )}
+              
+              {['posted', 'overdue'].includes(invoice.status?.toLowerCase()) && (
+                <button
+                  onClick={() => setShowPaymentModal(true)}
+                  disabled={actionLoading}
+                  className="inline-flex items-center px-4 py-2 bg-[#4a9b68] border border-transparent rounded-lg text-sm font-medium text-white hover:bg-[#3a7b52] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4a9b68] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                >
+                  {actionLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-credit-card mr-2"></i>
+                      Record Payment
+                    </>
+                  )}
+                </button>
+              )}
+              
+              {invoice.status?.toLowerCase() === 'paid' && (
+                <span className="inline-flex items-center px-4 py-2 bg-[#4a9b68]/10 border border-[#4a9b68]/30 rounded-lg text-sm font-medium text-[#4a9b68]">
+                  <i className="fas fa-check-circle mr-2"></i>
+                  Invoice Paid
+                </span>
+              )}
             </div>
           </div>
 
@@ -208,7 +438,7 @@ const InvoicesViewModal = ({ open, onClose, invoiceId }) => {
                     <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border ${getStatusColor(invoice.status)}`}>
                       <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
                         invoice.status?.toLowerCase() === 'paid' ? 'bg-[#4a9b68]' :
-                        invoice.status?.toLowerCase() === 'sent' ? 'bg-blue2' :
+                        invoice.status?.toLowerCase() === 'posted' ? 'bg-blue2' :
                         invoice.status?.toLowerCase() === 'draft' ? 'bg-[#d9a44a]' :
                         invoice.status?.toLowerCase() === 'overdue' ? 'bg-[#d95a4a]' :
                         'bg-[#8b8f8c]'
@@ -248,7 +478,7 @@ const InvoicesViewModal = ({ open, onClose, invoiceId }) => {
 
               {/* Totals */}
               <div className="flex justify-end">
-                <div className="w-full  bg-[#f6f6f4] rounded-xl border border-gray-200 p-5">
+                <div className="w-full bg-[#f6f6f4] rounded-xl border border-gray-200 p-5">
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-[#4a636e]">Subtotal</span>

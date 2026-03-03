@@ -42,8 +42,8 @@ function App() {
     switch (currentPage) {
       case "leads":
         return <Leads sidebarCollapsed={collapsed} />;
-      // case "customers":
-      //   return <Customers sidebarCollapsed={collapsed} />;
+      case "dashboard":
+        return <Dashboard sidebarCollapsed={collapsed} />;
       // case "invoices":
       //   return <Invoices sidebarCollapsed={collapsed} />;
       // case "tasks":
@@ -86,7 +86,7 @@ function App() {
       case "operations":
         return <OperationsPage sidebarCollapsed={collapsed} setCurrentPage={setCurrentPage}/>;
       default:
-        return <Leads />;
+        return <Dashboard />;
     }
   };
 

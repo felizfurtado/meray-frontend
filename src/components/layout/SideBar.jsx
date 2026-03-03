@@ -3,7 +3,7 @@ import React from 'react';
 import logo from './logo_circle.png';
 const Sidebar = ({ currentPage, setCurrentPage, collapsed, onLogout }) => {
   const navItems = [
-    // { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-chart-pie' },
+    { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-chart-pie' },
     { id: 'leads', label: 'Leads', icon: 'fas fa-users' },
     // { id: 'customers', label: 'Customers', icon: 'fas fa-user-tie' },
     // { id: 'invoices', label: 'Invoices', icon: 'fas fa-file-invoice' },

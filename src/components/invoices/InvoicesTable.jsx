@@ -269,6 +269,7 @@ const InvoicesTable = ({
         invoiceId={selectedInvoice}
         onClose={() => setViewOpen(false)}
         schema={schema}
+        refetchInvoices={refetchInvoices}
       />
     </>
   );

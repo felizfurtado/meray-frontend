@@ -32,7 +32,7 @@ const InvoicesAddModal = ({
     setForm((prev) => ({
       ...prev,
       date: new Date().toISOString().split("T")[0],
-      items: [{ description: "", quantity: 1, price: 0 }],
+      items: [{ description: "", quantity: 1, price: 0, vat_included: false }],
     }));
   }, [open]);
 
@@ -41,7 +41,7 @@ const InvoicesAddModal = ({
   const addItem = () => {
     setForm((prev) => ({
       ...prev,
-      items: [...prev.items, { description: "", quantity: 1, price: 0 }],
+      items: [...prev.items, { description: "", quantity: 1, price: 0, vat_included: false }],
     }));
   };
 
@@ -51,32 +51,86 @@ const InvoicesAddModal = ({
     setForm({ ...form, items: updated });
   };
 
+  const toggleVatIncluded = (index) => {
+    const updated = [...form.items];
+    updated[index].vat_included = !updated[index].vat_included;
+    setForm({ ...form, items: updated });
+  };
+
   const removeItem = (index) => {
     const updated = form.items.filter((_, i) => i !== index);
     setForm({ ...form, items: updated });
   };
 
-  const subtotal = form.items.reduce((acc, item) => {
-    return acc + (Number(item.quantity) * Number(item.price));
+  // Calculate item subtotal with VAT logic
+ const calculateItemSubtotal = (item) => {
+  const quantity = Number(item.quantity) || 0;
+  const price = Number(item.price) || 0;
+  const lineTotal = quantity * price;
+  
+  // If VAT is included, we still use the line total as subtotal (VAT will be added separately in calculateTotalVAT)
+  return lineTotal;
+};
+
+  // Calculate total VAT from all items
+const calculateTotalVAT = () => {
+  return form.items.reduce((acc, item) => {
+    const quantity = Number(item.quantity) || 0;
+    const price = Number(item.price) || 0;
+    const lineTotal = quantity * price;
+    
+    if (item.vat_included) {
+      // VAT is included: add 5% VAT to this item
+      return acc + (lineTotal * 0.05);
+    } else {
+      // VAT is excluded: no VAT for this item
+      return acc + 0;
+    }
   }, 0);
+};
 
-  const vat = subtotal * 0.05;
-  const total = subtotal + vat;
 
-  const handleSave = async () => {
-    setSaving(true);
 
-    try {
-  await api.post("/invoices/", form);
-} catch (err) {
-  console.log("FULL ERROR:", err.response?.data);
-  alert(err.response?.data?.error || "Something went wrong");
-}
+const subtotal = form.items.reduce((acc, item) => {
+  return acc + calculateItemSubtotal(item);
+}, 0);
 
-    setSaving(false);
-    onClose();
-    refetchInvoices?.();
-  };
+const vat = calculateTotalVAT();
+const total = subtotal + vat;
+
+ const handleSave = async () => {
+  setSaving(true);
+
+  try {
+    // Create a copy of form with calculated values
+    const invoiceData = {
+      ...form,
+      subtotal: subtotal,
+      vat: vat,
+      total: total
+    };
+    
+    // 🔥 ADD THIS CONSOLE LOG
+    console.log("SENDING TO BACKEND:", JSON.stringify(invoiceData, null, 2));
+    console.log("Items with vat_included:", invoiceData.items.map(item => ({
+      description: item.description,
+      price: item.price,
+      vat_included: item.vat_included,
+      lineTotal: item.quantity * item.price,
+      vatAmount: item.vat_included ? (item.quantity * item.price * 0.05) : 0
+    })));
+    console.log("Calculated totals:", { subtotal, vat, total });
+    
+    await api.post("/invoices/", invoiceData);
+  } catch (err) {
+    console.log("FULL ERROR:", err.response?.data);
+    alert(err.response?.data?.error || "Something went wrong");
+  }
+
+  setSaving(false);
+  onClose();
+  refetchInvoices?.();
+};
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-AE', {
@@ -120,40 +174,39 @@ const InvoicesAddModal = ({
 
       {/* Invoice Type Navigation */}
       <div className="px-6 mb-6">
-  <div className="bg-[#f6f6f4] p-1 rounded-lg flex w-full border border-gray-200">
-    <button
-      onClick={() => setInvoiceType("customer")}
-      className={`flex-1 px-5 py-2 rounded-md text-sm font-medium transition-all ${
-        invoiceType === "customer"
-          ? "bg-white text-blue2 shadow-sm border border-gray-200"
-          : "text-[#4a636e] hover:text-[#1f221f]"
-      }`}
-    >
-      <i className="fas fa-user-tie mr-2"></i>
-      Customer Invoice
-    </button>
+        <div className="bg-[#f6f6f4] p-1 rounded-lg flex w-full border border-gray-200">
+          <button
+            onClick={() => setInvoiceType("customer")}
+            className={`flex-1 px-5 py-2 rounded-md text-sm font-medium transition-all ${
+              invoiceType === "customer"
+                ? "bg-white text-blue2 shadow-sm border border-gray-200"
+                : "text-[#4a636e] hover:text-[#1f221f]"
+            }`}
+          >
+            <i className="fas fa-user-tie mr-2"></i>
+            Customer Invoice
+          </button>
 
-    <button
-      onClick={() => setInvoiceType("custom")}
-      className={`flex-1 px-5 py-2 rounded-md text-sm font-medium transition-all ${
-        invoiceType === "custom"
-          ? "bg-white text-blue2 shadow-sm border border-gray-200"
-          : "text-[#4a636e] hover:text-[#1f221f]"
-      }`}
-    >
-      <i className="fas fa-user-plus mr-2"></i>
-      Custom Invoice
-    </button>
-  </div>
+          <button
+            onClick={() => setInvoiceType("custom")}
+            className={`flex-1 px-5 py-2 rounded-md text-sm font-medium transition-all ${
+              invoiceType === "custom"
+                ? "bg-white text-blue2 shadow-sm border border-gray-200"
+                : "text-[#4a636e] hover:text-[#1f221f]"
+            }`}
+          >
+            <i className="fas fa-user-plus mr-2"></i>
+            Custom Invoice
+          </button>
+        </div>
 
-  <p className="text-xs text-[#8b8f8c] mt-2 flex items-center gap-1">
-    <i className="fas fa-info-circle text-[10px]"></i>
-    {invoiceType === "customer" 
-      ? "Select an existing customer from your database" 
-      : "Create a one-time invoice with custom customer details"}
-  </p>
-</div>
-
+        <p className="text-xs text-[#8b8f8c] mt-2 flex items-center gap-1">
+          <i className="fas fa-info-circle text-[10px]"></i>
+          {invoiceType === "customer" 
+            ? "Select an existing customer from your database" 
+            : "Create a one-time invoice with custom customer details"}
+        </p>
+      </div>
 
       <div className="px-6 pb-6 space-y-8">
         {/* Customer Selection Section - Changes based on invoice type */}
@@ -381,8 +434,8 @@ const InvoicesAddModal = ({
                 className="w-full rounded-lg border border-[#e5e7eb] px-4 py-2.5 text-sm text-[#1f221f] focus:border-blue2 focus:ring-2 focus:ring-blue2/20 transition-all bg-white"
               >
                 <option value="draft" className="text-[#d9a44a]">Draft</option>
-                <option value="sent" className="text-blue2">Sent</option>
-                <option value="paid" className="text-[#4a9b68]">Paid</option>
+                <option value="Posted" className="text-blue2">Posted</option>
+                {/* <option value="paid" className="text-[#4a9b68]">Paid</option> */}
               </select>
             </div>
           </div>
@@ -390,103 +443,186 @@ const InvoicesAddModal = ({
 
         {/* Items Section - Same for both types */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-5 bg-blue2 rounded-full"></div>
-              <h3 className="text-sm font-semibold text-[#1f221f] uppercase tracking-wider flex items-center gap-2">
-                <i className="fas fa-boxes text-blue2"></i>
-                Invoice Items
-              </h3>
+  <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center gap-2">
+      <div className="w-1 h-5 bg-blue2 rounded-full"></div>
+      <h3 className="text-sm font-semibold text-[#1f221f] uppercase tracking-wider flex items-center gap-2">
+        <i className="fas fa-boxes text-blue2"></i>
+        Invoice Items
+      </h3>
+    </div>
+    <button
+      onClick={addItem}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue2/10 text-blue2 rounded-lg text-xs font-medium border border-blue2/30 hover:bg-blue2/20 transition-colors group"
+    >
+      <i className="fas fa-plus-circle text-xs group-hover:scale-110 transition-transform"></i>
+      Add Item
+    </button>
+  </div>
+
+  {/* Column Headers */}
+  {form.items.length > 0 && (
+    <div className="grid grid-cols-12 gap-3 mb-2 px-3">
+      <div className="col-span-8">
+        <span className="text-xs font-medium text-[#4a636e] uppercase tracking-wider">Description</span>
+      </div>
+      <div className="col-span-3">
+        <span className="text-xs font-medium text-[#4a636e] uppercase tracking-wider">Quantity</span>
+      </div>
+      <div className="col-span-1"></div>
+    </div>
+  )}
+
+  <div className="space-y-3">
+    {form.items.map((item, index) => (
+      <div 
+        key={index} 
+        className="bg-white rounded-xl border border-gray-200 hover:border-blue2/30 hover:shadow-md transition-all duration-200 overflow-hidden group/item"
+      >
+        {/* First row - Description and Quantity */}
+        <div className="grid grid-cols-12 gap-3 items-center p-3 pb-2 border-b border-gray-100">
+          <div className="col-span-8">
+            <div className="relative">
+              <input
+                placeholder="Enter item description..."
+                value={item.description}
+                onChange={(e) =>
+                  updateItem(index, "description", e.target.value)
+                }
+                className="w-full rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm text-[#1f221f] placeholder:text-[#8b8f8c]/50 focus:border-blue2 focus:ring-2 focus:ring-blue2/20 transition-all bg-white"
+              />
+              {!item.description && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <i className="fas fa-pencil-alt text-[10px] text-[#8b8f8c]/30"></i>
+                </div>
+              )}
             </div>
-            <button
-              onClick={addItem}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue2/10 text-blue2 rounded-lg text-xs font-medium border border-blue2/30 hover:bg-blue2/20 transition-colors"
-            >
-              <i className="fas fa-plus-circle text-xs"></i>
-              Add Item
-            </button>
           </div>
-
-          <div className="space-y-3">
-            {form.items.map((item, index) => (
-              <div key={index} className="grid grid-cols-12 gap-3 items-center bg-white p-3 rounded-lg border border-gray-200 hover:border-blue2/30 transition-all">
-                <div className="col-span-5">
-                  <input
-                    placeholder="Item description"
-                    value={item.description}
-                    onChange={(e) =>
-                      updateItem(index, "description", e.target.value)
-                    }
-                    className="w-full rounded-lg border border-[#e5e7eb] px-3 py-2 text-sm text-[#1f221f] placeholder:text-[#8b8f8c]/60 focus:border-blue2 focus:ring-2 focus:ring-blue2/20 transition-all"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <input
-                    type="number"
-                    placeholder="Qty"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      updateItem(index, "quantity", e.target.value)
-                    }
-                    className="w-full rounded-lg border border-[#e5e7eb] px-3 py-2 text-sm text-[#1f221f] placeholder:text-[#8b8f8c]/60 focus:border-blue2 focus:ring-2 focus:ring-blue2/20 transition-all"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8b8f8c] text-xs">AED</span>
-                    <input
-                      type="number"
-                      placeholder="Price"
-                      value={item.price}
-                      onChange={(e) =>
-                        updateItem(index, "price", e.target.value)
-                      }
-                      className="w-full rounded-lg border border-[#e5e7eb] pl-12 pr-3 py-2 text-sm text-[#1f221f] placeholder:text-[#8b8f8c]/60 focus:border-blue2 focus:ring-2 focus:ring-blue2/20 transition-all"
-                    />
-                  </div>
-                </div>
-                <div className="col-span-2 text-right font-medium text-[#1f221f]">
-                  {formatCurrency(Number(item.quantity) * Number(item.price))}
-                </div>
-                <div className="col-span-1 text-right">
-                  <button
-                    onClick={() => removeItem(index)}
-                    className="p-2 text-[#d95a4a] hover:text-[#d95a4a] hover:bg-[#d95a4a]/10 rounded-lg transition-colors"
-                    title="Remove item"
-                  >
-                    <i className="fas fa-trash-alt text-sm"></i>
-                  </button>
-                </div>
+          <div className="col-span-3">
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="0"
+                value={item.quantity}
+                onChange={(e) =>
+                  updateItem(index, "quantity", e.target.value)
+                }
+                className="w-full rounded-lg border border-[#e5e7eb] px-3 py-2.5 text-sm text-[#1f221f] placeholder:text-[#8b8f8c]/50 focus:border-blue2 focus:ring-2 focus:ring-blue2/20 transition-all bg-white"
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] text-[#8b8f8c]">
+                units
               </div>
-            ))}
-
-            {form.items.length === 0 && (
-              <div className="py-8 text-center bg-[#f6f6f4] rounded-lg border border-gray-200">
-                <div className="w-16 h-16 rounded-full bg-blue2/10 flex items-center justify-center mx-auto mb-3">
-                  <i className="fas fa-boxes text-2xl text-blue2"></i>
-                </div>
-                <p className="text-sm text-[#4a636e]">No items added yet</p>
-                <button
-                  onClick={addItem}
-                  className="mt-2 text-xs text-blue2 hover:text-blue2 font-medium"
-                >
-                  Click to add your first item
-                </button>
-              </div>
-            )}
+            </div>
+          </div>
+          <div className="col-span-1 flex justify-end">
+            <button
+              onClick={() => removeItem(index)}
+              className="p-2 text-[#d95a4a]/60 hover:text-[#d95a4a] hover:bg-[#d95a4a]/10 rounded-lg transition-all opacity-0 group-hover/item:opacity-100 focus:opacity-100"
+              title="Remove item"
+            >
+              <i className="fas fa-trash-alt text-sm"></i>
+            </button>
           </div>
         </div>
 
+        {/* Second row - Price, VAT toggle, and Line Total */}
+        <div className="grid grid-cols-12 gap-3 items-center p-3 pt-2 bg-gradient-to-r from-transparent via-white to-white">
+          <div className="col-span-4">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#4a636e] font-medium text-sm">AED</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={item.price}
+                onChange={(e) =>
+                  updateItem(index, "price", e.target.value)
+                }
+                className="w-full rounded-lg border border-[#e5e7eb] pl-12 pr-3 py-2.5 text-sm text-[#1f221f] placeholder:text-[#8b8f8c]/50 focus:border-blue2 focus:ring-2 focus:ring-blue2/20 transition-all bg-white"
+              />
+            </div>
+          </div>
+          <div className="col-span-3">
+            <button
+  onClick={() => toggleVatIncluded(index)}
+  className={`w-full px-2 py-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 border ${
+    item.vat_included
+      ? "bg-blue2/10 text-blue2 border-blue2/30 hover:bg-blue2/20"
+      : "bg-[#f6f6f4] text-[#4a636e] border-gray-200 hover:bg-blue2/5 hover:border-blue2/30"
+  }`}
+>
+  <i className={`fas ${item.vat_included ? 'fa-check-circle text-blue2' : 'fa-circle text-[#8b8f8c]'} text-xs`}></i>
+  <span className="text-xs">
+    {item.vat_included ? 'VAT Included (5%)' : 'VAT Excluded (0%)'}
+  </span>
+</button>
+          </div>
+          <div className="col-span-4 col-start-9">
+            <div className="bg-gradient-to-r from-blue2/5 to-transparent p-2 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#4a636e] font-medium">Total:</span>
+                <span className="text-base font-bold text-[#1f221f]">
+                  {formatCurrency(Number(item.quantity) * Number(item.price))}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Item number indicator */}
+        <div className="absolute top-2 left-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+          <span className="text-[10px] font-mono text-[#8b8f8c]/30">#{index + 1}</span>
+        </div>
+      </div>
+    ))}
+
+    {form.items.length === 0 && (
+      <div 
+        onClick={addItem}
+        className="py-12 text-center bg-gradient-to-br from-[#f6f6f4] to-white rounded-xl border-2 border-dashed border-gray-200 hover:border-blue2/30 hover:bg-blue2/5 transition-all cursor-pointer group"
+      >
+        <div className="w-20 h-20 rounded-full bg-blue2/5 flex items-center justify-center mx-auto mb-4 group-hover:bg-blue2/10 transition-all group-hover:scale-110">
+          <i className="fas fa-boxes text-3xl text-blue2/40 group-hover:text-blue2/60"></i>
+        </div>
+        <p className="text-sm font-medium text-[#4a636e] mb-2">No items added yet</p>
+        <p className="text-xs text-[#8b8f8c] mb-3">Click to add your first invoice item</p>
+        <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue2 text-white rounded-lg text-sm font-medium hover:bg-blue2/90 transition-all shadow-sm hover:shadow group-hover:translate-y-[-2px]">
+          <i className="fas fa-plus-circle text-xs"></i>
+          Add Item
+        </button>
+      </div>
+    )}
+  </div>
+
+  {/* Quick Tips */}
+  {/* Quick Tips */}
+{form.items.length > 0 && (
+  <div className="mt-4 flex items-center gap-4 text-xs text-[#8b8f8c] bg-[#f6f6f4] p-3 rounded-lg border border-gray-200">
+    <div className="flex items-center gap-1.5">
+      <i className="fas fa-info-circle text-blue2/70"></i>
+      <span>Press <kbd className="px-1.5 py-0.5 bg-white rounded border border-gray-200 text-[10px]">Tab</kbd> to quickly add next item</span>
+    </div>
+    <div className="flex items-center gap-1.5">
+      <i className="fas fa-calculator text-blue2/70"></i>
+      <span>VAT is only applied to items marked as "VAT Included"</span>
+    </div>
+  </div>
+)}
+</div>
+
         {/* Totals Preview */}
         <div className="flex justify-end">
-          <div className="w-full  bg-gradient-to-br from-blue2/5 to-[#a9c0c9]/10 rounded-xl border border-gray-200 p-5">
+          <div className="w-full bg-gradient-to-br from-blue2/5 to-[#a9c0c9]/10 rounded-xl border border-gray-200 p-5">
             <h4 className="text-sm font-semibold text-[#1f221f] mb-3 flex items-center gap-2">
               <i className="fas fa-calculator text-blue2"></i>
               Invoice Summary
             </h4>
             <div className="space-y-2">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-[#4a636e]">Subtotal</span>
+                <span className="text-[#4a636e]">Subtotal (Excluding VAT)</span>
                 <span className="font-medium text-[#1f221f]">{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
@@ -497,6 +633,14 @@ const InvoicesAddModal = ({
                 <span className="font-semibold text-[#1f221f]">Total</span>
                 <span className="text-xl font-bold text-[#1f221f]">{formatCurrency(total)}</span>
               </div>
+              <div className="mt-2 pt-2 border-t border-dashed border-gray-200 text-xs text-[#8b8f8c]">
+  <p className="flex items-center gap-1">
+    <i className="fas fa-info-circle text-blue2/70"></i>
+    {form.items.some(item => item.vat_included) 
+      ? "VAT is extracted from items marked as 'VAT Included'" 
+      : "No VAT is applied to any items"}
+  </p>
+</div>
             </div>
           </div>
         </div>

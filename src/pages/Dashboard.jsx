@@ -1,516 +1,327 @@
-import React from "react";
+// pages/Dashboard.jsx
 
-const Dashboard = ({ sidebarCollapsed = false }) => {
-  // Hardcoded demo data
-  const stats = {
-    revenue: 1285000,
-    leads: 156,
-    customers: 89,
-    tasks: 42,
-    inventoryValue: 245000,
-    invoices: 67
-  };
+import React, { useEffect, useState } from "react";
+import PageHeader from "../components/layout/PageHeader";
+import api from "../api/api";
 
-  const recentLeads = [
-    { id: 1, name: "TechCorp Inc", status: "qualified", value: 85000, probability: "75%", days: 2 },
-    { id: 2, name: "Global Logistics", status: "contacted", value: 65000, probability: "60%", days: 1 },
-    { id: 3, name: "MediHealth Systems", status: "new", value: 120000, probability: "40%", days: 0 },
-    { id: 4, name: "EduTech Solutions", status: "proposal", value: 45000, probability: "80%", days: 3 },
-    { id: 5, name: "RetailPlus Group", status: "qualified", value: 95000, probability: "70%", days: 1 }
-  ];
+const Dashboard = ({ sidebarCollapsed }) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const recentTasks = [
-    { id: 1, title: "Follow up with TechCorp", priority: "high", dueDate: "2024-05-24", assignedTo: "Sarah Johnson", status: "in_progress" },
-    { id: 2, title: "Prepare Q2 Report", priority: "medium", dueDate: "2024-05-25", assignedTo: "Michael Chen", status: "todo" },
-    { id: 3, title: "Client Meeting", priority: "high", dueDate: "2024-05-24", assignedTo: "You", status: "todo" },
-    { id: 4, title: "Update Inventory", priority: "low", dueDate: "2024-05-26", assignedTo: "David Wilson", status: "completed" },
-    { id: 5, title: "Review Budget", priority: "medium", dueDate: "2024-05-27", assignedTo: "Emma Garcia", status: "in_progress" }
-  ];
+  useEffect(() => {
+    setLoading(true);
+    api.get("/dashboard/")
+      .then(res => setData(res.data))
+      .catch(err => console.error("Dashboard error:", err))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const lowStockItems = [
-    { id: 1, name: "Ball Bearings", current: 12, minimum: 20, status: "critical" },
-    { id: 2, name: "Circuit Breakers", current: 18, minimum: 25, status: "critical" },
-    { id: 3, name: "Safety Helmets", current: 28, minimum: 30, status: "warning" },
-    { id: 4, name: "Steel Sheets", current: 22, minimum: 25, status: "warning" },
-    { id: 5, name: "Drill Machine", current: 2, minimum: 5, status: "critical" }
-  ];
-
-  const upcomingTasks = [
-    { id: 1, title: "Team Meeting", time: "10:00 AM", duration: "1 hour", type: "meeting" },
-    { id: 2, title: "Client Call - TechCorp", time: "2:30 PM", duration: "30 mins", type: "call" },
-    { id: 3, title: "Project Review", time: "4:00 PM", duration: "45 mins", type: "review" }
-  ];
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'AED',
+  const formatCurrency = (val) =>
+    new Intl.NumberFormat("en-AE", {
+      style: "currency",
+      currency: "AED",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value || 0);
+      maximumFractionDigits: 0,
+    }).format(val || 0);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "—";
+    try {
+      return new Date(dateString).toLocaleDateString("en-AE", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return dateString;
+    }
   };
 
-  const StatCard = ({ title, value, icon, color, subtext, link, trend }) => (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-gray-600 mb-2">{title}</p>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-2xl font-bold text-gray-900">
-              {title.includes('Revenue') || title.includes('Value') ? formatCurrency(value) : value}
-            </h3>
-            {trend && (
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                trend.startsWith('+') 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-red-100 text-red-700'
-              }`}>
-                {trend}
-              </span>
-            )}
+  const getStatusColor = (status) => {
+    const statusMap = {
+      draft: "bg-amber-100 text-amber-700 border-amber-200",
+      posted: "bg-blue-100 text-blue-700 border-blue-200",
+      paid: "bg-green-100 text-green-700 border-green-200",
+      overdue: "bg-rose-100 text-rose-700 border-rose-200",
+    };
+    return statusMap[status?.toLowerCase()] || "bg-gray-100 text-gray-700 border-gray-200";
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f6f6f4]">
+        <PageHeader
+          title="Dashboard"
+          description="Quick overview of your business"
+          icon="fas fa-chart-pie"
+          collapsed={sidebarCollapsed}
+        />
+        <div className={`mt-6 px-6 ${sidebarCollapsed ? "ml-[60px]" : "ml-[140px]"}`}>
+          <div className="flex items-center justify-center h-96">
+            <div className="relative">
+              <div className="w-20 h-20 border-4 border-blue2/20 rounded-full"></div>
+              <div className="absolute top-0 left-0 w-20 h-20 border-4 border-blue2 border-t-transparent rounded-full animate-spin"></div>
+              <i className="fas fa-chart-pie absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-blue2 text-2xl"></i>
+            </div>
           </div>
-          {subtext && <p className="text-xs text-gray-500 mt-1">{subtext}</p>}
-        </div>
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
-          <i className={`${icon} text-white text-xl`}></i>
         </div>
       </div>
-      {link && (
-        <div className="mt-4 pt-3 border-t border-gray-100">
-          <a href={link} className="text-sm text-blue2 hover:text-blue1 font-medium flex items-center gap-1">
-            View Details
-            <i className="fas fa-arrow-right text-xs"></i>
-          </a>
-        </div>
-      )}
-    </div>
-  );
+    );
+  }
 
-  const leftMargin = sidebarCollapsed ? 'ml-[60px]' : 'ml-[140px]';
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-[#f6f6f4]">
+        <PageHeader
+          title="Dashboard"
+          description="Quick overview of your business"
+          icon="fas fa-chart-pie"
+          collapsed={sidebarCollapsed}
+        />
+        <div className={`mt-6 px-6 ${sidebarCollapsed ? "ml-[60px]" : "ml-[140px]"}`}>
+          <div className="bg-white rounded-2xl p-8 text-center border border-gray-200">
+            <div className="w-20 h-20 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-4">
+              <i className="fas fa-exclamation-triangle text-3xl text-rose-500"></i>
+            </div>
+            <h2 className="text-xl font-semibold text-[#1f221f] mb-2">
+              Failed to load dashboard
+            </h2>
+            <p className="text-[#8b8f8c] mb-4">Please try again later</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue2 text-white rounded-lg hover:bg-[#4a636e] transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const s = data.summary;
 
   return (
-    <div className={`${leftMargin} mr-14 mt-20 transition-all duration-300 min-h-screen bg-gray-50`}>
-      <div className="p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600 mt-1">Welcome back! Here's what's happening today.</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-sm shadow-sm">
-                  Last 30 Days
-                </div>
-              </div>
-              <button className="px-4 py-2.5 bg-gradient-to-r from-blue1 to-blue2 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2 shadow-sm">
-                <i className="fas fa-sync-alt"></i>
-                Refresh
-              </button>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#f6f6f4] pb-10">
+      {/* Background decoration */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue2/5 to-[#a9c0c9]/10 rounded-full -mr-20 -mt-20"></div>
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-amber-500/5 to-transparent rounded-full -ml-20 -mb-20"></div>
+      </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          <StatCard
-            title="Total Revenue"
-            value={stats.revenue}
-            icon="fas fa-money-bill-wave"
-            color="bg-gradient-to-br from-green-500 to-green-600"
-            subtext="Last 30 days"
-            trend="+18%"
-            link="/reports/revenue"
+      <PageHeader
+        title="Dashboard"
+        description="Quick overview of your business"
+        icon="fas fa-chart-pie"
+        collapsed={sidebarCollapsed}
+      />
+
+   <div className={`relative mt-6 px-8 transition-all duration-300 ${
+  sidebarCollapsed ? "ml-[80px] mr-6" : "ml-[110px] mr-7"
+}`}>
+        
+        {/* KPI Cards - All with consistent gradient styling */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+          <StatCard 
+            title="Leads" 
+            value={s.total_leads} 
+            icon="fas fa-user-plus" 
+            gradient="from-blue2/20 to-[#a9c0c9]/30"
+            iconColor="text-blue2"
           />
-
-          <StatCard
-            title="Active Leads"
-            value={stats.leads}
-            icon="fas fa-users"
-            color="bg-gradient-to-br from-blue-500 to-blue-600"
-            subtext="In pipeline"
-            trend="+22%"
-            link="/leads"
+          <StatCard 
+            title="Customers" 
+            value={s.total_customers} 
+            icon="fas fa-users" 
+            gradient="from-blue2/20 to-[#a9c0c9]/30"
+            iconColor="text-blue2"
           />
-
-          <StatCard
-            title="Total Customers"
-            value={stats.customers}
-            icon="fas fa-user-check"
-            color="bg-gradient-to-br from-purple-500 to-purple-600"
-            subtext="Active accounts"
-            trend="+12%"
-            link="/customers"
+          <StatCard 
+            title="Invoices" 
+            value={s.total_invoices} 
+            icon="fas fa-file-invoice" 
+            gradient="from-blue2/20 to-[#a9c0c9]/30"
+            iconColor="text-blue2"
           />
-
-          <StatCard
-            title="Pending Tasks"
-            value={stats.tasks}
-            icon="fas fa-tasks"
-            color="bg-gradient-to-br from-amber-500 to-amber-600"
-            subtext="Require attention"
-            trend="+8%"
-            link="/tasks"
+          <StatCard 
+            title="Inventory" 
+            value={s.total_inventory} 
+            icon="fas fa-box" 
+            gradient="from-blue2/20 to-[#a9c0c9]/30"
+            iconColor="text-blue2"
           />
-
-          <StatCard
-            title="Inventory Value"
-            value={stats.inventoryValue}
-            icon="fas fa-boxes"
-            color="bg-gradient-to-br from-cyan-500 to-cyan-600"
-            subtext="Current stock value"
-            trend="+5%"
-            link="/inventory"
+          <StatCard 
+            title="Revenue" 
+            value={formatCurrency(s.total_revenue)} 
+            icon="fas fa-coins" 
+            gradient="from-blue2/20 to-[#a9c0c9]/30"
+            iconColor="text-blue2"
           />
-
-          <StatCard
-            title="Pending Invoices"
-            value={stats.invoices}
-            icon="fas fa-file-invoice"
-            color="bg-gradient-to-br from-red-500 to-red-600"
-            subtext="Awaiting payment"
-            trend="-3%"
-            link="/invoices"
+          <StatCard 
+            title="Outstanding" 
+            value={formatCurrency(s.outstanding)} 
+            icon="fas fa-hourglass-half" 
+            gradient="from-blue2/20 to-[#a9c0c9]/30"
+            iconColor="text-blue2"
           />
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Recent Leads */}
-            <div className="bg-white rounded-xl border border-gray-200">
-              <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Recent Leads</h2>
-                  <p className="text-sm text-gray-600">Newest opportunities in pipeline</p>
+        {/* Bottom Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Invoices */}
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:border-blue2/30 transition-all">
+            <div className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue2/5 to-[#a9c0c9]/10 rounded-full -mr-10 -mt-10"></div>
+              <div className="relative p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue2/20 to-[#a9c0c9]/30 flex items-center justify-center">
+                      <i className="fas fa-file-invoice text-blue2"></i>
+                    </div>
+                    <h3 className="text-lg font-semibold text-[#1f221f]">Recent Invoices</h3>
+                  </div>
+                  {/* <button className="text-sm text-blue2 hover:text-[#4a636e] flex items-center gap-1">
+                    View All <i className="fas fa-arrow-right text-xs"></i>
+                  </button> */}
                 </div>
-                <a href="/leads" className="text-sm text-blue2 hover:text-blue1 font-medium">
-                  View All →
-                </a>
-              </div>
-              
-              <div className="divide-y divide-gray-200">
-                {recentLeads.map(lead => (
-                  <div key={lead.id} className="p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
-                          <i className="fas fa-user text-blue2 text-sm"></i>
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-gray-900">{lead.name}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                              lead.status === 'qualified' ? 'bg-green-100 text-green-700' :
-                              lead.status === 'contacted' ? 'bg-blue-100 text-blue2' :
-                              lead.status === 'proposal' ? 'bg-purple-100 text-purple-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {lead.status}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {formatCurrency(lead.value)}
+
+                {data.recent_invoices.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <div className="w-16 h-16 rounded-full bg-[#f6f6f4] flex items-center justify-center mx-auto mb-3">
+                      <i className="fas fa-file-invoice text-2xl text-[#8b8f8c]"></i>
+                    </div>
+                    <p className="text-sm text-[#8b8f8c]">No invoices yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {data.recent_invoices.map(inv => (
+                      <div key={inv.id} className="group relative">
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue2/0 via-blue2/5 to-blue2/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+                        <div className="relative flex items-center justify-between p-3 bg-[#f6f6f4]/50 rounded-lg border border-gray-200 hover:border-blue2/30 transition-all">
+                          <div className="flex-1">
+                            <p className="font-medium text-[#1f221f]">{inv.number}</p>
+                            <p className="text-xs text-[#8b8f8c] mt-0.5">{inv.customer || 'Walk-in Customer'}</p>
+                          </div>
+                          <div className="text-right ml-4">
+                            <p className="font-bold text-[#1f221f]">{formatCurrency(inv.total)}</p>
+                            <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-1 ${getStatusColor(inv.status)}`}>
+                              {inv.status}
                             </span>
                           </div>
                         </div>
                       </div>
-                      
-                      <div className="text-right">
-                        <div className="text-sm font-bold text-gray-900">{lead.probability}</div>
-                        <div className="text-xs text-gray-500">Probability</div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Tasks */}
-            <div className="bg-white rounded-xl border border-gray-200">
-              <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Recent Tasks</h2>
-                  <p className="text-sm text-gray-600">Latest activities and assignments</p>
-                </div>
-                <a href="/tasks" className="text-sm text-blue2 hover:text-blue1 font-medium">
-                  View All →
-                </a>
-              </div>
-              
-              <div className="divide-y divide-gray-200">
-                {recentTasks.map(task => (
-                  <div key={task.id} className="p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          task.priority === 'high' ? 'bg-red-100 text-red-600' :
-                          task.priority === 'medium' ? 'bg-amber-100 text-amber-600' :
-                          'bg-blue-100 text-blue2'
-                        }`}>
-                          <i className={`fas ${
-                            task.status === 'completed' ? 'fa-check-circle' :
-                            task.status === 'in_progress' ? 'fa-spinner fa-spin' :
-                            'fa-tasks'
-                          } text-sm`}></i>
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-gray-900">{task.title}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-gray-500">
-                              Due: {new Date(task.dueDate).toLocaleDateString()}
-                            </span>
-                            <span className="text-xs text-gray-500">•</span>
-                            <span className="text-xs text-gray-500">
-                              {task.assignedTo}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        task.status === 'completed' ? 'bg-green-100 text-green-700' :
-                        task.status === 'in_progress' ? 'bg-blue-100 text-blue2' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
-                        {task.status === 'in_progress' ? 'In Progress' : 
-                         task.status === 'completed' ? 'Completed' : 'To Do'}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Low Stock Alert */}
-            <div className="bg-white rounded-xl border border-gray-200">
-              <div className="px-5 py-4 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900">Low Stock Alert</h2>
-                    <p className="text-sm text-gray-600">Items need reordering</p>
+          {/* Recent Leads */}
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:border-blue2/30 transition-all">
+            <div className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br bg-[#f6f6f4]/50 rounded-full -mr-10 -mt-10"></div>
+              <div className="relative p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                  
+
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue2/20 to-[#a9c0c9]/30 flex items-center justify-center">
+                      <i className="fas fa-user-plus text-blue2"></i>
+                    </div>
+                    <h3 className="text-lg font-semibold text-[#1f221f]">Recent Leads</h3>
                   </div>
-                  <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
-                    {lowStockItems.length} items
-                  </span>
+                  {/* <button className="text-sm text-blue2 hover:text-[#4a636e] flex items-center gap-1">
+                    View All <i className="fas fa-arrow-right text-xs"></i>
+                  </button> */}
                 </div>
-              </div>
-              
-              <div className="p-4">
-                <div className="space-y-3">
-                  {lowStockItems.map(item => (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-red-50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          item.status === 'critical' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
-                        }`}>
-                          <i className={`fas ${
-                            item.status === 'critical' ? 'fa-exclamation-triangle' : 'fa-exclamation-circle'
-                          } text-xs`}></i>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900">{item.name}</h4>
-                          <div className="text-xs text-gray-500">
-                            Current: {item.current} • Min: {item.minimum}
+
+                {data.recent_leads.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <div className="w-16 h-16 rounded-full bg-[#f6f6f4] flex items-center justify-center mx-auto mb-3">
+                      <i className="fas fa-user-plus text-2xl text-[#8b8f8c]"></i>
+                    </div>
+                    <p className="text-sm text-[#8b8f8c]">No leads yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {data.recent_leads.map(lead => (
+                      <div key={lead.id} className="group relative">
+                        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/5 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+                        <div className="relative flex items-center justify-between p-3 bg-[#f6f6f4]/50 rounded-lg border border-gray-200 hover:border-amber-500/30 transition-all">
+                          <div className="flex-1">
+                            <p className="font-medium text-[#1f221f]">{lead.name}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-xs text-[#8b8f8c]">{lead.company || 'No company'}</p>
+                              {lead.email && (
+                                <>
+                                  <span className="text-xs text-[#8b8f8c]">•</span>
+                                  <p className="text-xs text-[#8b8f8c]">{lead.email}</p>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right ml-4">
+                            {lead.status && (
+                              <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                                {lead.status}
+                              </span>
+                            )}
+                            {lead.created_at && (
+                              <p className="text-xs text-[#8b8f8c] mt-1">{formatDate(lead.created_at)}</p>
+                            )}
                           </div>
                         </div>
                       </div>
-                      
-                      <div className="text-right">
-                        <div className={`text-xs font-bold ${
-                          item.status === 'critical' ? 'text-red-600' : 'text-amber-600'
-                        }`}>
-                          {item.current <= item.minimum ? 'Reorder Now' : 'Low Stock'}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <a href="/inventory" className="block mt-4 text-center w-full px-4 py-2.5 text-sm font-medium text-blue2 bg-blue-50 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors">
-                  Manage Inventory
-                </a>
-              </div>
-            </div>
-
-            {/* Upcoming Schedule */}
-            <div className="bg-white rounded-xl border border-gray-200">
-              <div className="px-5 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Upcoming Schedule</h2>
-                <p className="text-sm text-gray-600">Today's agenda</p>
-              </div>
-              
-              <div className="p-4">
-                <div className="space-y-3">
-                  {upcomingTasks.map(task => (
-                    <div key={task.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        task.type === 'meeting' ? 'bg-blue-100 text-blue2' :
-                        task.type === 'call' ? 'bg-green-100 text-green-600' :
-                        'bg-purple-100 text-purple-600'
-                      }`}>
-                        <i className={`fas ${
-                          task.type === 'meeting' ? 'fa-users' :
-                          task.type === 'call' ? 'fa-phone' :
-                          'fa-chart-line'
-                        } text-sm`}></i>
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-gray-500">
-                            <i className="fas fa-clock mr-1"></i>
-                            {task.time}
-                          </span>
-                          <span className="text-xs text-gray-500">•</span>
-                          <span className="text-xs text-gray-500">{task.duration}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="mt-4 pt-3 border-t border-gray-200">
-                  <div className="text-center">
-                    <button className="text-sm text-gray-600 hover:text-blue2 flex items-center justify-center gap-1 mx-auto">
-                      <i className="fas fa-calendar-plus"></i>
-                      Add Event
-                    </button>
+                    ))}
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-5">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <i className="fas fa-bolt text-blue2"></i>
-                Quick Actions
-              </h3>
-              
-              <div className="space-y-3">
-                <a href="/leads/add" className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-100 hover:bg-blue-50 transition-colors">
-                  <div className="w-8 h-8 rounded-lg bg-blue2 text-white flex items-center justify-center">
-                    <i className="fas fa-plus text-sm"></i>
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">Add New Lead</span>
-                </a>
-                
-                <a href="/tasks/add" className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-100 hover:bg-blue-50 transition-colors">
-                  <div className="w-8 h-8 rounded-lg bg-blue2 text-white flex items-center justify-center">
-                    <i className="fas fa-tasks text-sm"></i>
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">Create Task</span>
-                </a>
-                
-                <a href="/inventory/add" className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-100 hover:bg-blue-50 transition-colors">
-                  <div className="w-8 h-8 rounded-lg bg-blue2 text-white flex items-center justify-center">
-                    <i className="fas fa-box text-sm"></i>
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">Add Inventory Item</span>
-                </a>
-                
-                <a href="/reports" className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-100 hover:bg-blue-50 transition-colors">
-                  <div className="w-8 h-8 rounded-lg bg-blue2 text-white flex items-center justify-center">
-                    <i className="fas fa-chart-pie text-sm"></i>
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">View Reports</span>
-                </a>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Performance Metrics */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
-                <i className="fas fa-trend-up"></i>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Performance</h3>
-            </div>
-            <ul className="space-y-2">
-              <li className="text-sm text-gray-700 flex items-center gap-2">
-                <i className="fas fa-check-circle text-green-500 text-xs"></i>
-                Revenue up 18% this month
-              </li>
-              <li className="text-sm text-gray-700 flex items-center gap-2">
-                <i className="fas fa-check-circle text-green-500 text-xs"></i>
-                Lead conversion at 24%
-              </li>
-              <li className="text-sm text-gray-700 flex items-center gap-2">
-                <i className="fas fa-check-circle text-green-500 text-xs"></i>
-                92% task completion rate
-              </li>
-              <li className="text-sm text-gray-700 flex items-center gap-2">
-                <i className="fas fa-check-circle text-green-500 text-xs"></i>
-                15 new customers this month
-              </li>
-            </ul>
-          </div>
-
-          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl border border-amber-200 p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
-                <i className="fas fa-exclamation-triangle"></i>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Attention Needed</h3>
-            </div>
-            <ul className="space-y-2">
-              <li className="text-sm text-gray-700 flex items-center gap-2">
-                <i className="fas fa-exclamation-circle text-amber-500 text-xs"></i>
-                5 items need reordering
-              </li>
-              <li className="text-sm text-gray-700 flex items-center gap-2">
-                <i className="fas fa-exclamation-circle text-amber-500 text-xs"></i>
-                7 overdue invoices
-              </li>
-              <li className="text-sm text-gray-700 flex items-center gap-2">
-                <i className="fas fa-exclamation-circle text-amber-500 text-xs"></i>
-                3 urgent tasks pending
-              </li>
-              <li className="text-sm text-gray-700 flex items-center gap-2">
-                <i className="fas fa-exclamation-circle text-amber-500 text-xs"></i>
-                2 meetings scheduled today
-              </li>
-            </ul>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue2 flex items-center justify-center">
-                <i className="fas fa-lightbulb"></i>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Recommendations</h3>
-            </div>
-            <ul className="space-y-2">
-              <li className="text-sm text-gray-700 flex items-center gap-2">
-                <i className="fas fa-rocket text-blue2 text-xs"></i>
-                Follow up on qualified leads
-              </li>
-              <li className="text-sm text-gray-700 flex items-center gap-2">
-                <i className="fas fa-chart-pie text-blue2 text-xs"></i>
-                Review monthly reports
-              </li>
-              <li className="text-sm text-gray-700 flex items-center gap-2">
-                <i className="fas fa-truck text-blue2 text-xs"></i>
-                Place inventory orders
-              </li>
-              <li className="text-sm text-gray-700 flex items-center gap-2">
-                <i className="fas fa-users text-blue2 text-xs"></i>
-                Schedule team meeting
-              </li>
-            </ul>
-          </div>
-        </div>
+   
       </div>
     </div>
   );
 };
+
+const StatCard = ({ title, value, icon, gradient, iconColor }) => (
+  <div className="group relative">
+    <div className="absolute inset-0 bg-gradient-to-r from-blue2/0 via-blue2/5 to-blue2/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+    <div className="relative bg-white rounded-2xl border border-gray-200 p-6 hover:border-blue2/30 hover:shadow-lg transition-all duration-200">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs font-medium text-[#8b8f8c] uppercase tracking-wider mb-2">
+            {title}
+          </p>
+          <p className="text-2xl font-bold text-[#1f221f]">
+            {value}
+          </p>
+        </div>
+        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+          <i className={`${icon} ${iconColor} text-xl`}></i>
+        </div>
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue2/20 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform"></div>
+    </div>
+  </div>
+);
+
+const QuickActionButton = ({ icon, label, color, iconColor, onClick }) => (
+  <button
+    onClick={onClick}
+    className="group relative overflow-hidden bg-white rounded-xl border border-gray-200 p-4 hover:border-blue2/30 hover:shadow-lg transition-all"
+  >
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+    <div className="relative flex items-center gap-3">
+      <div className={`w-10 h-10 rounded-lg ${color} bg-opacity-10 flex items-center justify-center`}>
+        <i className={`${icon} ${iconColor}`}></i>
+      </div>
+      <span className="text-sm font-medium text-[#1f221f]">{label}</span>
+    </div>
+  </button>
+);
 
 export default Dashboard;
