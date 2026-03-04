@@ -15,10 +15,21 @@ const ExpenseInvoiceMarkPaidModal = ({
   useEffect(() => {
     if (!open) return;
 
-    setBankAccount(null); // reset selection
+    setBankAccount(null);
 
     api.get("/accounts/by-type/?type=Asset")
-      .then(res => setAccounts(res.data.accounts || []))
+      .then(res => {
+
+        const allAccounts = res.data.accounts || [];
+
+        // 🔥 Keep only Cash (1010) and Bank (1020)
+        const filtered = allAccounts.filter(acc =>
+          acc.code === "1010" || acc.code === "1020"
+        );
+
+        setAccounts(filtered);
+
+      })
       .catch(() => setAccounts([]));
 
   }, [open]);
@@ -36,7 +47,7 @@ const ExpenseInvoiceMarkPaidModal = ({
       setSaving(true);
 
       await api.post(`/expense-invoices/${invoiceId}/mark-paid/`, {
-        bank_account: Number(bankAccount)   // 🔥 FORCE NUMBER
+        bank_account: Number(bankAccount)
       });
 
       onSuccess?.();
@@ -63,14 +74,17 @@ const ExpenseInvoiceMarkPaidModal = ({
           className="w-full border rounded-lg px-3 py-2 mb-6"
         >
           <option value="">Select Bank / Cash Account</option>
+
           {accounts.map(acc => (
             <option key={acc.id} value={acc.id}>
               {acc.code} - {acc.name}
             </option>
           ))}
+
         </select>
 
         <div className="flex justify-end gap-3">
+
           <button
             onClick={onClose}
             className="px-4 py-2 border rounded-lg"
@@ -85,6 +99,7 @@ const ExpenseInvoiceMarkPaidModal = ({
           >
             {saving ? "Processing..." : "Confirm Payment"}
           </button>
+
         </div>
 
       </div>
