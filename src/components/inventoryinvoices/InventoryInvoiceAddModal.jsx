@@ -526,7 +526,7 @@ const InventoryInvoiceAddModal = ({
 
         {/* Totals */}
         <div className="flex justify-end">
-          <div className="w-full md:w-96 bg-gradient-to-br from-[#f6f6f4] to-white p-6 rounded-xl border border-[#e5e7eb]">
+          <div className="w-full  bg-gradient-to-br from-[#f6f6f4] to-white p-6 rounded-xl border border-[#e5e7eb]">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-1 h-5 bg-blue2 rounded-full"></div>
               <h4 className="text-sm font-semibold text-[#1f221f] uppercase tracking-wider">

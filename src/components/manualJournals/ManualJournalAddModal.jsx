@@ -10,11 +10,18 @@ const ManualJournalAddModal = ({
   const [accounts, setAccounts] = useState([]);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  
+  // Account selector states
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [accountSearchTerm, setAccountSearchTerm] = useState("");
+  const [filteredAccounts, setFilteredAccounts] = useState([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const [selectedAccountIndex, setSelectedAccountIndex] = useState(null);
 
   const [form, setForm] = useState({
     date: new Date().toISOString().split("T")[0],
     currency: "AED",
-    status: "Draft",
+    status: "Posted",
     notes: "",
     entries: [
       { 
@@ -32,18 +39,60 @@ const ManualJournalAddModal = ({
     if (!open) return;
 
     const fetchAccounts = async () => {
+      setLoadingAccounts(true);
       try {
         const res = await api.get("/accounts/list/");
         setAccounts(res.data.accounts || []);
+        setFilteredAccounts(res.data.accounts || []);
       } catch (error) {
         console.error("Error fetching accounts:", error);
+      } finally {
+        setLoadingAccounts(false);
       }
     };
 
     fetchAccounts();
   }, [open]);
 
+  // Filter accounts when search term changes
+  useEffect(() => {
+    if (!accountSearchTerm.trim()) {
+      setFilteredAccounts(accounts);
+    } else {
+      const term = accountSearchTerm.toLowerCase();
+      setFilteredAccounts(accounts.filter(acc => 
+        acc.name?.toLowerCase().includes(term) ||
+        acc.code?.toLowerCase().includes(term) ||
+        acc.type?.toLowerCase().includes(term)
+      ));
+    }
+  }, [accountSearchTerm, accounts]);
+
   if (!open) return null;
+
+  const formatCurrency = (val) =>
+    new Intl.NumberFormat("en-AE", {
+      style: "currency",
+      currency: "AED",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(val || 0);
+
+  const openAccountSelector = (index) => {
+    setSelectedAccountIndex(index);
+    setAccountSearchTerm("");
+    setShowAccountModal(true);
+  };
+
+  const selectAccount = (account) => {
+    if (selectedAccountIndex !== null) {
+      updateEntry(selectedAccountIndex, "account", account.id);
+      updateEntry(selectedAccountIndex, "account_name", account.name || "");
+      updateEntry(selectedAccountIndex, "account_code", account.code || "");
+      setShowAccountModal(false);
+      setSelectedAccountIndex(null);
+    }
+  };
 
   const updateEntry = (i, key, value) => {
     const updated = [...form.entries];
@@ -182,6 +231,145 @@ const ManualJournalAddModal = ({
       title="Create Manual Journal"
       width="max-w-7xl"
     >
+      {/* Account Selection Modal */}
+      {showAccountModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowAccountModal(false)}>
+          <div className="bg-white rounded-2xl max-w-2xl w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-[#1f221f] flex items-center gap-2">
+                  <i className="fas fa-book text-blue2"></i>
+                  Select Account
+                </h3>
+                <button 
+                  onClick={() => setShowAccountModal(false)}
+                  className="text-[#8b8f8c] hover:text-[#1f221f] transition-colors"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              
+              {/* Search Bar */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={accountSearchTerm}
+                  onChange={(e) => setAccountSearchTerm(e.target.value)}
+                  placeholder="Search by code, name, or type..."
+                  className="w-full border-2 border-[#e5e7eb] rounded-lg pl-10 pr-4 py-3 text-sm focus:border-blue2 focus:ring-2 focus:ring-blue2/20 transition-all"
+                  autoFocus
+                />
+                <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#8b8f8c]"></i>
+                {accountSearchTerm && (
+                  <button
+                    onClick={() => setAccountSearchTerm("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8b8f8c] hover:text-[#1f221f]"
+                  >
+                    <i className="fas fa-times-circle"></i>
+                  </button>
+                )}
+              </div>
+              
+              <p className="text-xs text-[#8b8f8c] mt-2">
+                {filteredAccounts.length} accounts found
+              </p>
+            </div>
+            
+            <div className="p-6 max-h-96 overflow-y-auto">
+              {loadingAccounts ? (
+                <div className="py-8 text-center">
+                  <div className="w-12 h-12 border-4 border-blue2/20 border-t-blue2 rounded-full animate-spin mx-auto mb-3"></div>
+                  <p className="text-sm text-[#8b8f8c]">Loading accounts...</p>
+                </div>
+              ) : filteredAccounts.length === 0 ? (
+                <div className="py-8 text-center">
+                  <div className="w-16 h-16 rounded-full bg-[#f6f6f4] flex items-center justify-center mx-auto mb-3">
+                    <i className="fas fa-book text-2xl text-[#8b8f8c]"></i>
+                  </div>
+                  <p className="text-sm font-medium text-[#1f221f] mb-1">
+                    {accountSearchTerm ? "No matching accounts" : "No accounts found"}
+                  </p>
+                  <p className="text-xs text-[#8b8f8c]">
+                    {accountSearchTerm ? "Try a different search term" : "Please create accounts first"}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredAccounts.map((account) => (
+                    <div
+                      key={account.id}
+                      onClick={() => selectAccount(account)}
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-blue2/30 hover:bg-blue2/5 cursor-pointer transition-all group"
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className={`w-10 h-10 rounded-lg ${
+                          account.type === 'ASSET' ? 'bg-green-100' :
+                          account.type === 'LIABILITY' ? 'bg-orange-100' :
+                          account.type === 'EQUITY' ? 'bg-purple-100' :
+                          account.type === 'REVENUE' ? 'bg-blue-100' :
+                          account.type === 'EXPENSE' ? 'bg-red-100' :
+                          'bg-gray-100'
+                        } flex items-center justify-center`}>
+                          <i className={`fas ${
+                            account.type === 'ASSET' ? 'fa-building' :
+                            account.type === 'LIABILITY' ? 'fa-credit-card' :
+                            account.type === 'EQUITY' ? 'fa-chart-pie' :
+                            account.type === 'REVENUE' ? 'fa-arrow-up' :
+                            account.type === 'EXPENSE' ? 'fa-arrow-down' :
+                            'fa-book'
+                          } ${
+                            account.type === 'ASSET' ? 'text-green-600' :
+                            account.type === 'LIABILITY' ? 'text-orange-600' :
+                            account.type === 'EQUITY' ? 'text-purple-600' :
+                            account.type === 'REVENUE' ? 'text-blue-600' :
+                            account.type === 'EXPENSE' ? 'text-red-600' :
+                            'text-gray-600'
+                          }`}></i>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-[#1f221f]">{account.name}</span>
+                            <span className="text-xs bg-[#f6f6f4] px-2 py-0.5 rounded-full text-[#4a636e] font-mono">
+                              {account.code}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue2/10 text-blue2">
+                              {account.type}
+                            </span>
+                            {account.balance !== undefined && (
+                              <span className="text-xs text-[#8b8f8c]">
+                                Balance: {formatCurrency(account.balance)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <i className="fas fa-chevron-right text-[#8b8f8c] group-hover:text-blue2 transition-colors"></i>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200 bg-[#f6f6f4]/50 flex justify-between items-center">
+              <span className="text-xs text-[#8b8f8c]">
+                <i className="fas fa-info-circle mr-1"></i>
+                Click on an account to select it
+              </span>
+              <button
+                onClick={() => setShowAccountModal(false)}
+                className="px-4 py-2 text-sm font-medium text-[#4a636e] hover:text-[#1f221f] hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-200"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header - Your style */}
       <div className="relative overflow-hidden bg-gradient-to-r from-blue2/5 to-[#a9c0c9]/20 rounded-t-2xl border-b border-blue2/20 px-6 py-4 -mt-6 -mx-6 mb-4">
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue2/10 to-[#a9c0c9]/20 rounded-full -mr-10 -mt-10"></div>
@@ -224,7 +412,6 @@ const ManualJournalAddModal = ({
             label: "Status",
             type: "select",
             options: [
-              { label: "Draft", value: "Draft" },
               { label: "Posted", value: "Posted" }
             ],
             icon: "fas fa-flag"
@@ -321,35 +508,37 @@ const ManualJournalAddModal = ({
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Column - Account & Description */}
                 <div className="space-y-4">
-                  {/* Account Selection */}
+                  {/* Account Selection - Clickable Field */}
                   <div>
                     <label className="flex items-center gap-1.5 text-xs font-medium text-[#4a636e] mb-1.5">
                       <i className="fas fa-book text-blue2/70 text-xs"></i>
                       Account <span className="text-[#d95a4a]">*</span>
                     </label>
-                    <select
-                      value={entry.account}
-                      onChange={(e) => {
-                        const selectedId = e.target.value;
-                        const selectedAccount = accounts.find(
-                          (acc) => String(acc.id) === selectedId
-                        );
-
-                        updateEntry(i, "account", selectedId);
-                        updateEntry(i, "account_name", selectedAccount?.name || "");
-                        updateEntry(i, "account_code", selectedAccount?.code || "");
-                      }}
-                      className={`w-full border-2 rounded-lg px-4 py-3 text-sm text-[#1f221f] focus:border-blue2 focus:ring-2 focus:ring-blue2/20 transition-all bg-white ${
-                        hasAccountError ? "border-red-300 bg-red-50" : "border-[#e5e7eb]"
-                      }`}
+                    <button
+                      type="button"
+                      onClick={() => openAccountSelector(i)}
+                      className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
+                        entry.account 
+                          ? 'border-blue2/30 bg-blue2/5 hover:bg-blue2/10' 
+                          : 'border-[#e5e7eb] hover:border-blue2/30'
+                      } ${hasAccountError ? 'border-red-300 bg-red-50' : ''}`}
                     >
-                      <option value="">-- Select Account --</option>
-                      {accounts.map((acc) => (
-                        <option key={acc.id} value={acc.id}>
-                          {acc.code} - {acc.name}
-                        </option>
-                      ))}
-                    </select>
+                      {entry.account ? (
+                        <div>
+                          <div className="font-medium text-[#1f221f]">{entry.account_name}</div>
+                          <div className="text-xs text-[#8b8f8c] flex items-center gap-1 mt-0.5">
+                            <span className="bg-blue2/10 text-blue2 px-1.5 py-0.5 rounded text-[10px]">
+                              {entry.account_code}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-[#8b8f8c] flex items-center gap-2">
+                          <i className="fas fa-search text-xs"></i>
+                          Click to select account
+                        </span>
+                      )}
+                    </button>
                     {hasAccountError && (
                       <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                         <i className="fas fa-exclamation-circle"></i>
@@ -435,13 +624,6 @@ const ManualJournalAddModal = ({
                       <i className="fas fa-exclamation-circle"></i>
                       {errors[`entry_${i}_both`]}
                     </p>
-                  )}
-
-                  {/* Account Details Display (if selected) */}
-                  {entry.account && (
-                    <div className="mt-2 text-xs bg-blue2/5 text-blue2 rounded-lg px-3 py-2 border border-blue2/20">
-                      <span className="font-medium">{entry.account_code}</span> - {entry.account_name}
-                    </div>
                   )}
                 </div>
               </div>

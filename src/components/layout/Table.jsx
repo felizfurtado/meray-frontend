@@ -370,11 +370,11 @@ const Table = ({
           <div className="flex items-center gap-3 text-sm text-gray-600">
             <span className="font-semibold text-blue2">{filteredData.length}</span> {title}
             <span className="text-gray-400">•</span>
-            <span className="text-gray-600">
+            {/* <span className="text-gray-600">
               Sort by <strong className="text-gray-900">Date</strong>
-            </span>
+            </span> */}
           </div>
-          <div className="flex items-center gap-4 mt-2 md:mt-0 text-sm text-gray-600">
+          {/* <div className="flex items-center gap-4 mt-2 md:mt-0 text-sm text-gray-600">
             <button className="flex items-center gap-1.5 hover:text-blue2 transition-colors" onClick={onExport}>
               <i className="fas fa-download text-blue2 text-xs"></i>
               Export
@@ -387,12 +387,12 @@ const Table = ({
               <i className="fas fa-columns text-blue2 text-xs"></i>
               Columns
             </button>
-          </div>
+          </div> */}
         </div>
       )}
 
       {/* 3. Bulk Actions Bar */}
-      {showBulkActions && selectedRows.size > 0 && (
+      {/* {showBulkActions && selectedRows.size > 0 && (
         <div className="bg-white mx-5 mt-3 mb-3 p-3 rounded-lg border border-gray-200 shadow-sm flex flex-col md:flex-row md:items-center gap-3 animate-slideDown">
           <div className="flex items-center gap-2 font-semibold text-blue2 text-sm">
             <i className="fas fa-check-circle text-blue2"></i>
@@ -423,7 +423,7 @@ const Table = ({
             </button>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* 4. Table */}
       <div className="overflow-x-auto">
@@ -570,9 +570,7 @@ const Table = ({
               onChange={handlePageSizeChange}
             >
               <option value="10">10 per page</option>
-              <option value="25">25 per page</option>
-              <option value="50">50 per page</option>
-              <option value="100">100 per page</option>
+           
             </select>
           </div>
         </div>

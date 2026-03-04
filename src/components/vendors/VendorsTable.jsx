@@ -163,7 +163,7 @@ const VendorsTable = ({ sidebarCollapsed = false }) => {
               e.stopPropagation();
               openView(row);
             }}
-            className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600"
+             className="group relative p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
           >
             <i className="fas fa-eye text-sm"></i>
           </button>
@@ -173,7 +173,7 @@ const VendorsTable = ({ sidebarCollapsed = false }) => {
               e.stopPropagation();
               openEdit(row);
             }}
-            className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600"
+            className="group relative p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
           >
             <i className="fas fa-edit text-sm"></i>
           </button>
@@ -183,7 +183,7 @@ const VendorsTable = ({ sidebarCollapsed = false }) => {
               e.stopPropagation();
               deleteVendor(row);
             }}
-            className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600"
+             className="group relative p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
           >
             <i className="fas fa-trash text-sm"></i>
           </button>
@@ -203,7 +203,19 @@ const VendorsTable = ({ sidebarCollapsed = false }) => {
   return (
     <>
       <Table
-        title={schema?.name || "Vendors"}
+        title={
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue2 to-[#4a636e] flex items-center justify-center shadow-lg shadow-blue2/30">
+                  <span className="text-white text-lg">
+  <i className="fas fa-users"></i>
+</span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-[#1f221f]">{schema?.name || "Vendors"}</h2>
+                  <p className="text-xs text-[#8b8f8c]">Track and manage journal entries</p>
+                </div>
+              </div>
+            }
         icon={schema?.icon || "🏬"}
         columns={columns}
         data={rows}

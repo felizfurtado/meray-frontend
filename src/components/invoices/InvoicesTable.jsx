@@ -164,13 +164,8 @@ const InvoicesTable = ({
       header: "ACTIONS",
       width: "180px",
       render: (_, row) => (
-        <div className="flex items-center justify-end gap-2">
-          {/* Status Badge (for quick reference) */}
-          {row.status && (
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border mr-2 ${getStatusColor(row.status)}`}>
-              {row.status}
-            </span>
-          )}
+        <div className="flex items-center justify-left gap-2">
+        
 
           {/* VIEW */}
           <button
@@ -232,7 +227,9 @@ const InvoicesTable = ({
             title={
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue2 to-[#4a636e] flex items-center justify-center shadow-lg shadow-blue2/30">
-                  <span className="text-white text-lg">{schema?.icon || '🧾'}</span>
+                  <span className="text-white text-lg">
+  <i className="fas fa-file-invoice"></i>
+</span>
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-[#1f221f]">{schema?.name || "Invoices"}</h2>

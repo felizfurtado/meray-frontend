@@ -70,7 +70,8 @@ const ExpenseInvoiceTable = ({
             setSelected(row.id);
             setViewOpen(true);
           }}
-          className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600"
+                  className="group relative p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+
         >
           <i className="fas fa-eye text-sm"></i>
         </button>
@@ -79,7 +80,8 @@ const ExpenseInvoiceTable = ({
         {row.status !== "Paid" && (
           <button
             onClick={() => deleteInvoice(row)}
-            className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600"
+                    className="group relative p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+
           >
             <i className="fas fa-trash text-sm"></i>
           </button>
@@ -89,7 +91,7 @@ const ExpenseInvoiceTable = ({
         {row.status === "Posted" && (
           <button
             onClick={() => openMarkPaid(row)}
-            className="w-8 h-8 rounded-lg bg-green-100 text-green-700"
+            className="group relative p-2 text-gray-400 hover:bg-green-100 hover:text-green-700 rounded-lg transition-all"
           >
             <i className="fas fa-check text-sm"></i>
           </button>
@@ -102,7 +104,19 @@ const ExpenseInvoiceTable = ({
   return (
     <>
       <Table
-        title={schema?.name}
+         title={
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue2 to-[#4a636e] flex items-center justify-center shadow-lg shadow-blue2/30">
+                  <span className="text-white text-lg">
+  <i className="fas fa-receipt"></i>
+</span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-[#1f221f]">{schema?.name || "Expense Incoices"}</h2>
+                  <p className="text-xs text-[#8b8f8c]">Track and manage journal entries</p>
+                </div>
+              </div>
+            }
         icon="🧾"
         columns={columns}
         data={invoices}

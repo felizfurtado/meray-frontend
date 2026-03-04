@@ -225,13 +225,12 @@ const LeadsTable = ({ sidebarCollapsed = false, onSchemaLoad }) => {
               e.stopPropagation();
               openView(row);
             }} 
-            className="relative group w-9 h-9 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/60 flex items-center justify-center text-blue2 hover:from-blue-100 hover:to-indigo-100 hover:border-blue2/50 transition-all duration-200 shadow-sm hover:shadow"
+                   className="group relative p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+
             title="View Details"
           >
-            <i className="fas fa-eye text-sm group-hover:scale-110 transition-transform duration-200"></i>
-            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-              View
-            </span>
+            <i className="fas fa-eye text-sm  transition-transform duration-200"></i>
+            
           </button>
           
           <button 
@@ -239,13 +238,12 @@ const LeadsTable = ({ sidebarCollapsed = false, onSchemaLoad }) => {
               e.stopPropagation();
               openEdit(row);
             }} 
-            className="relative group w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200/60 flex items-center justify-center text-emerald-600 hover:from-emerald-100 hover:to-green-100 hover:border-emerald-400/50 transition-all duration-200 shadow-sm hover:shadow"
+            className="group relative p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+
             title="Edit Lead"
           >
-            <i className="fas fa-edit text-sm group-hover:scale-110 transition-transform duration-200"></i>
-            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-              Edit
-            </span>
+            <i className="fas fa-edit text-sm  transition-transform duration-200"></i>
+         
           </button>
           
           <button 
@@ -253,13 +251,12 @@ const LeadsTable = ({ sidebarCollapsed = false, onSchemaLoad }) => {
               e.stopPropagation();
               deleteLead(row);
             }} 
-            className="relative group w-9 h-9 rounded-lg bg-gradient-to-br from-rose-50 to-red-50 border border-rose-200/60 flex items-center justify-center text-rose-600 hover:from-rose-100 hover:to-red-100 hover:border-rose-400/50 transition-all duration-200 shadow-sm hover:shadow"
+        className="group relative p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+
             title="Delete Lead"
           >
-            <i className="fas fa-trash-alt text-sm group-hover:scale-110 transition-transform duration-200"></i>
-            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-              Delete
-            </span>
+            <i className="fas fa-trash-alt text-sm  transition-transform duration-200"></i>
+          
           </button>
         </div>
       ),

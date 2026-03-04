@@ -93,8 +93,8 @@ const ManualJournalViewModal = ({
         </div>
       </div>
 
-      {/* Journal Info Cards - Enhanced */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 mb-6">
+      {/* Journal Info Cards - Updated */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 mb-6">
         <div className="bg-white rounded-xl border border-[#e5e7eb] p-4 hover:border-blue2/30 transition-all">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue2/10 flex items-center justify-center">
@@ -118,23 +118,30 @@ const ManualJournalViewModal = ({
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="bg-white rounded-xl border border-[#e5e7eb] p-4 hover:border-blue2/30 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-              <i className="fas fa-sticky-note text-purple-600"></i>
-            </div>
-            <div>
-              <p className="text-xs text-[#8b8f8c] uppercase tracking-wide">Notes</p>
-              <p className="text-base font-semibold text-[#1f221f] truncate max-w-[200px]" title={journal.notes}>
-                {journal.notes || "—"}
-              </p>
+      {/* Notes Section - Moved to its own line and renamed */}
+      {journal.notes && (
+        <div className="px-4 mb-6">
+          <div className="bg-gradient-to-br from-purple-50 to-white rounded-xl border border-purple-100 p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                <i className="fas fa-sticky-note text-purple-600"></i>
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-medium text-[#4a636e] uppercase tracking-wide mb-1">
+                  Invoice Adjustment Reference
+                </p>
+                <p className="text-sm text-[#1f221f] whitespace-pre-wrap break-words">
+                  {journal.notes}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Entries Table - Kept exactly as you requested */}
+      {/* Entries Table */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mx-4 mb-6">
         <div className="grid grid-cols-4 bg-gray-50 px-4 py-3 text-xs font-semibold text-[#8b8f8c] uppercase tracking-wide">
           <div>Account</div>
@@ -173,7 +180,7 @@ const ManualJournalViewModal = ({
         ))}
       </div>
 
-      {/* Totals Section - Enhanced */}
+      {/* Totals Section */}
       <div className="px-4 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-1 h-5 bg-blue2 rounded-full"></div>
@@ -230,7 +237,7 @@ const ManualJournalViewModal = ({
         </div>
       </div>
 
-      {/* Footer - Enhanced */}
+      {/* Footer */}
       <div className="border-t border-[#e5e7eb] bg-[#f6f6f4]/50 px-6 py-4 -mb-6 -mx-6 mt-2 flex items-center justify-between">
         <div className="flex items-center gap-3 text-xs text-[#8b8f8c]">
           <span className="flex items-center gap-1.5">

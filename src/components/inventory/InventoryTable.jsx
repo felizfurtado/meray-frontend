@@ -84,7 +84,19 @@ const InventoryTable = ({ schema, sidebarCollapsed, refetchInventory }) => {
   return (
     <>
       <Table
-        title={schema?.name || "Inventory"}
+        title={
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue2 to-[#4a636e] flex items-center justify-center shadow-lg shadow-blue2/30">
+                  <span className="text-white text-lg">
+  <i className="fas fa-boxes"></i>
+</span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-[#1f221f]">{schema?.name || "Inventory"}</h2>
+                  <p className="text-xs text-[#8b8f8c]">Track and manage journal entries</p>
+                </div>
+              </div>
+            }
         icon={schema?.icon || "📦"}
         columns={columns}
         data={rows}
