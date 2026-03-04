@@ -47,7 +47,7 @@ const ExpenseInvoiceMarkPaidModal = ({
       setSaving(true);
 
       await api.post(`/expense-invoices/${invoiceId}/mark-paid/`, {
-        bank_account: Number(bankAccount)
+        bank_account: bankAccount
       });
 
       onSuccess?.();
@@ -76,7 +76,7 @@ const ExpenseInvoiceMarkPaidModal = ({
           <option value="">Select Bank / Cash Account</option>
 
           {accounts.map(acc => (
-            <option key={acc.id} value={acc.id}>
+            <option key={acc.id} value={acc.code}>
               {acc.code} - {acc.name}
             </option>
           ))}
