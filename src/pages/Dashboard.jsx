@@ -3,10 +3,14 @@
 import React, { useEffect, useState } from "react";
 import PageHeader from "../components/layout/PageHeader";
 import api from "../api/api";
+import GaugeChart from "../components/charts/GaugeChart";
+import ReceivablesCard from "../components/dashboard/ReceivablesCard";
 
 const Dashboard = ({ sidebarCollapsed }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+
 
   useEffect(() => {
     setLoading(true);
@@ -101,6 +105,16 @@ const Dashboard = ({ sidebarCollapsed }) => {
 
   const s = data.summary;
 
+    const grossMargin =
+  s.total_revenue > 0
+    ? ((s.gross_profit / s.total_revenue) * 100).toFixed(1)
+    : 0;
+
+const netMargin =
+  s.total_revenue > 0
+    ? ((s.net_profit / s.total_revenue) * 100).toFixed(1)
+    : 0;
+
   return (
     <div className="min-h-screen bg-[#f6f6f4] pb-10">
       {/* Background decoration */}
@@ -144,27 +158,45 @@ const Dashboard = ({ sidebarCollapsed }) => {
             iconColor="text-blue2"
           />
           <StatCard 
-            title="Inventory" 
-            value={s.total_inventory} 
+            title="Gross Profit (AED)" 
+            value={s.gross_profit} 
             icon="fas fa-box" 
             gradient="from-blue2/20 to-[#a9c0c9]/30"
             iconColor="text-blue2"
           />
           <StatCard 
-            title="Revenue" 
-            value={formatCurrency(s.total_revenue)} 
+            title="Revenue (AED)" 
+            value={s.total_revenue} 
             icon="fas fa-coins" 
             gradient="from-blue2/20 to-[#a9c0c9]/30"
             iconColor="text-blue2"
           />
           <StatCard 
-            title="Outstanding" 
-            value={formatCurrency(s.outstanding)} 
+            title="Net Profit (AED)" 
+            value={s.net_profit} 
             icon="fas fa-hourglass-half" 
             gradient="from-blue2/20 to-[#a9c0c9]/30"
             iconColor="text-blue2"
           />
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+        <GaugeChart
+    value={parseFloat(grossMargin)}
+    title="Gross Profit Margin"
+  />
+  <GaugeChart
+    value={parseFloat(netMargin)}
+    title="Net Profit Margin"
+  />
+
+  
+</div>
+
+<div className="grid grid-cols-1  gap-6 mb-8">
+  <ReceivablesCard data={data.receivables} />
+</div>
 
         {/* Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

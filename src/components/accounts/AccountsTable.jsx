@@ -18,13 +18,43 @@ const AccountsTable = forwardRef((props, ref) => {
   const [editOpen, setEditOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
 
+  // Define the custom type order
+  const typeOrder = {
+    "Asset": 1,
+    "Liability": 2, 
+    "Equity": 3,
+    "Revenue": 4,
+    "Expense": 5
+  };
+
   const fetchAccounts = async () => {
     setLoading(true);
     try {
       const res = await api.get("/accounts/list/");
       const accounts = res.data.accounts || [];
 
-      setRows(accounts);
+      // Sort accounts: first by type (custom order), then by code
+      const sortedAccounts = [...accounts].sort((a, b) => {
+        // First sort by type using custom order
+        const typeCompare = (typeOrder[a.type] || 999) - (typeOrder[b.type] || 999);
+        
+        // If types are different, return type comparison
+        if (typeCompare !== 0) return typeCompare;
+        
+        // If same type, sort by code (as number if possible, otherwise as string)
+        const codeA = a.code;
+        const codeB = b.code;
+        
+        // Try to compare as numbers if both are numeric
+        if (!isNaN(codeA) && !isNaN(codeB)) {
+          return parseInt(codeA) - parseInt(codeB);
+        }
+        
+        // Otherwise compare as strings
+        return codeA.localeCompare(codeB);
+      });
+
+      setRows(sortedAccounts);
       setColumns(buildColumns());
     } catch (err) {
       console.error("Failed to load accounts", err);
@@ -142,7 +172,7 @@ const AccountsTable = forwardRef((props, ref) => {
 </span>
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-[#1f221f]">{ "Chart of Accounts"}</h2>
+                  <h2 className="text-lg font-semibold text-[#1f221f]">{"Chart of Accounts"}</h2>
                   <p className="text-xs text-[#8b8f8c]">Track and manage journal entries</p>
                 </div>
               </div>
