@@ -65,8 +65,7 @@ function App() {
       //   return <BankReconciliation sidebarCollapsed={collapsed} />;
       // case "chartsofaccounts":
       //   return <ChartOfAccounts sidebarCollapsed={collapsed} />;
-      // case "financialreports":
-      //   return <FinancialReports sidebarCollapsed={collapsed} />;
+
       // case "vendor":
       //   return <VendorPage sidebarCollapsed={collapsed} />;
       // case "expense":
@@ -85,6 +84,8 @@ function App() {
         return <InventorySalesInvoices sidebarCollapsed={collapsed} />;
       case "operations":
         return <OperationsPage sidebarCollapsed={collapsed} setCurrentPage={setCurrentPage}/>;
+      case "financialreports":
+        return <FinancialReports sidebarCollapsed={collapsed} />;
       default:
         return <Dashboard />;
     }

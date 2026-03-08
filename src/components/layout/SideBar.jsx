@@ -21,7 +21,7 @@ const Sidebar = ({ currentPage, setCurrentPage, collapsed, onLogout }) => {
     // { id: 'inventorysalesinvoice', label: 'Inventory Sales Invoicing', icon: 'fas fa-warehouse' },
     // { id: 'bankrec', label: 'Bank Recon', icon: 'fas fa-wallet' },
     // { id: 'chartsofaccounts', label: 'Chart Of Accounts', icon: 'fas fa-chart-bar' },
-    // { id: 'financialreports', label: 'Financial Reports', icon: 'fas fa-file' },
+    { id: 'financialreports', label: 'Financial Reports', icon: 'fas fa-file' },
     // { id: 'manualjournal', label: 'Manual Journal', icon: 'fas fa-file' },
     // { id: 'expensesinvoicing', label: 'Expenses Invoicing', icon: 'fas fa-file' },
 
