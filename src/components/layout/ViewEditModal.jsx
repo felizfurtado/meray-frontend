@@ -12,7 +12,7 @@ const ViewEditModal = ({ open, title, onClose, children }) => {
       />
 
       {/* Drawer */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl transform transition-transform duration-300 ease-in-out">
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-3xl transform transition-transform duration-300 ease-in-out">
         <div className="h-full flex flex-col bg-white shadow-xl">
           
           {/* Header */}

@@ -46,8 +46,8 @@ function App() {
         return <Dashboard sidebarCollapsed={collapsed} />;
       // case "invoices":
       //   return <Invoices sidebarCollapsed={collapsed} />;
-      // case "tasks":
-      //   return <Tasks sidebarCollapsed={collapsed} />;
+      case "tasks":
+        return <Tasks sidebarCollapsed={collapsed} />;
 
       case "company-profile":
         return <CompanyProfile sidebarCollapsed={collapsed} />;

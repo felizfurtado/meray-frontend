@@ -13,6 +13,7 @@ import ManualJournals from "./ManualJournals";
 import Inventory from "./Inventory";
 import InventoryInvoices from "./InventoryInvoices";
 import InventorySalesInvoices from "./InventorySalesInvoices";
+import InvoiceAdjustments from "./InvoiceAdjustments";
 
 const OperationsPage = ({ collapsed = false }) => {
 
@@ -46,6 +47,8 @@ const OperationsPage = ({ collapsed = false }) => {
         return <Customers sidebarCollapsed={collapsed} />;
       case "invoices":
         return <Invoices sidebarCollapsed={collapsed} />;
+      case "invoiceadj":
+        return <InvoiceAdjustments sidebarCollapsed={collapsed} />;
       case "vendor":
         return <VendorPage sidebarCollapsed={collapsed} />;
       case "expense":

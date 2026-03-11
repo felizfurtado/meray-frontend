@@ -237,7 +237,7 @@ const InventoryInvoiceTable = ({
           </button>
 
           {/* DOWNLOAD */}
-          <button
+          {/* <button
             onClick={() => downloadInvoice(row)}
             disabled={downloadingId === row.id}
             className="group relative p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -251,7 +251,7 @@ const InventoryInvoiceTable = ({
             <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
               Download
             </span>
-          </button>
+          </button> */}
 
           {/* DELETE (Draft only) */}
           {row.status === "draft" && (

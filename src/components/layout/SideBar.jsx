@@ -8,7 +8,7 @@ const Sidebar = ({ currentPage, setCurrentPage, collapsed, onLogout }) => {
     // { id: 'customers', label: 'Customers', icon: 'fas fa-user-tie' },
     // { id: 'invoices', label: 'Invoices', icon: 'fas fa-file-invoice' },
     { id: 'operations', label: 'Operations', icon: 'fas fa-file' },
-    { id: 'invoiceadj', label: 'Invoices Adjustment', icon: 'fas fa-file-invoice' },
+    // { id: 'invoiceadj', label: 'Invoices Adjustment', icon: 'fas fa-file-invoice' },
     // { id: 'tasks', label: 'Tasks', icon: 'fas fa-tasks' },
     { id: 'company-profile', label: 'Company', icon: 'fas fa-building' },
     // { id: 'vendor', label: 'vendor', icon: 'fas fa-building' },

@@ -5,7 +5,6 @@ import api from "../../api/api";
 const TaskAddModal = ({ 
   open, 
   onClose, 
-  schema, 
   refetchTasks,
   onSuccess 
 }) => {
@@ -17,7 +16,7 @@ const TaskAddModal = ({
     related_type: 'none',
     related_lead_id: '',
     related_customer_id: '',
-    related_invoice_id: '',
+    related_vendor_id: '',
     due_date: new Date().toISOString().split('T')[0],
     priority: 'medium',
     status: 'todo',
@@ -29,21 +28,50 @@ const TaskAddModal = ({
   const [errors, setErrors] = useState({});
   const [leads, setLeads] = useState([]);
   const [customers, setCustomers] = useState([]);
-  const [invoices, setInvoices] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [vendors, setVendors] = useState([]);
   const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
     if (!open) return;
     
     // Load dropdown data
-    Promise.all([
-      api.get('/leads/').then(res => setLeads(res.data.leads || [])).catch(() => setLeads([])),
-      api.get('/customers/').then(res => setCustomers(res.data.customers || [])).catch(() => setCustomers([])),
-      api.get('/invoices/').then(res => setInvoices(res.data.invoices || [])).catch(() => setInvoices([])),
-      // You'll need to create a users endpoint or get from localStorage
-      // api.get('/users/').then(res => setUsers(res.data || [])).catch(() => setUsers([]))
-    ]);
+    const loadData = async () => {
+      try {
+        const [leadsRes, customersRes, vendorsRes] = await Promise.all([
+          api.get('/leads/list/'),
+          api.get('/customers/list/'),
+          api.get('/vendors/list/')
+        ]);
+        
+        // Handle leads data
+        if (leadsRes.data.success && leadsRes.data.rows) {
+          setLeads(leadsRes.data.rows);
+        } else {
+          setLeads([]);
+        }
+        
+        // Handle customers data
+        if (customersRes.data.success && customersRes.data.rows) {
+          setCustomers(customersRes.data.rows);
+        } else {
+          setCustomers([]);
+        }
+        
+        // Handle vendors data
+        if (vendorsRes.data.success && vendorsRes.data.rows) {
+          setVendors(vendorsRes.data.rows);
+        } else {
+          setVendors([]);
+        }
+      } catch (error) {
+        console.error("Error loading dropdown data:", error);
+        setLeads([]);
+        setCustomers([]);
+        setVendors([]);
+      }
+    };
+    
+    loadData();
   }, [open]);
 
   // Handle input changes
@@ -67,7 +95,7 @@ const TaskAddModal = ({
         ...prev,
         related_lead_id: '',
         related_customer_id: '',
-        related_invoice_id: ''
+        related_vendor_id: ''
       }));
     }
   };
@@ -148,8 +176,8 @@ const TaskAddModal = ({
         submitData.related_lead_id = formData.related_lead_id;
       } else if (formData.related_type === 'customer' && formData.related_customer_id) {
         submitData.related_customer_id = formData.related_customer_id;
-      } else if (formData.related_type === 'invoice' && formData.related_invoice_id) {
-        submitData.related_invoice_id = formData.related_invoice_id;
+      } else if (formData.related_type === 'vendor' && formData.related_vendor_id) {
+        submitData.related_vendor_id = formData.related_vendor_id;
       }
       
       console.log("Creating task with data:", submitData);
@@ -174,7 +202,7 @@ const TaskAddModal = ({
         related_type: 'none',
         related_lead_id: '',
         related_customer_id: '',
-        related_invoice_id: '',
+        related_vendor_id: '',
         due_date: new Date().toISOString().split('T')[0],
         priority: 'medium',
         status: 'todo',
@@ -384,7 +412,7 @@ const TaskAddModal = ({
                 <option value="none">Not Linked</option>
                 <option value="lead">Lead</option>
                 <option value="customer">Customer</option>
-                <option value="invoice">Invoice</option>
+                <option value="vendor">Vendor</option>
               </select>
             </div>
             
@@ -402,7 +430,7 @@ const TaskAddModal = ({
                   <option value="">Select a lead...</option>
                   {leads.map(lead => (
                     <option key={lead.id} value={lead.id}>
-                      {lead.name} - {lead.company}
+                      {lead.name} {lead.company ? `- ${lead.company}` : ''}
                     </option>
                   ))}
                 </select>
@@ -423,28 +451,28 @@ const TaskAddModal = ({
                   <option value="">Select a customer...</option>
                   {customers.map(customer => (
                     <option key={customer.id} value={customer.id}>
-                      {customer.company_name} - {customer.customer_name}
+                      {customer.company} {customer.contact_name ? `- ${customer.contact_name}` : ''}
                     </option>
                   ))}
                 </select>
               </div>
             )}
             
-            {/* Invoice Selection */}
-            {formData.related_type === 'invoice' && (
+            {/* Vendor Selection */}
+            {formData.related_type === 'vendor' && (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Select Invoice
+                  Select Vendor
                 </label>
                 <select
-                  value={formData.related_invoice_id}
-                  onChange={(e) => handleInputChange('related_invoice_id', e.target.value)}
+                  value={formData.related_vendor_id}
+                  onChange={(e) => handleInputChange('related_vendor_id', e.target.value)}
                   className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue2 focus:border-blue2 bg-white transition-colors"
                 >
-                  <option value="">Select an invoice...</option>
-                  {invoices.map(invoice => (
-                    <option key={invoice.id} value={invoice.id}>
-                      {invoice.invoice_number} - {invoice.customer_name} (AED {parseFloat(invoice.total).toLocaleString()})
+                  <option value="">Select a vendor...</option>
+                  {vendors.map(vendor => (
+                    <option key={vendor.id} value={vendor.id}>
+                      {vendor.company} {vendor.contact_name ? `- ${vendor.contact_name}` : ''}
                     </option>
                   ))}
                 </select>
